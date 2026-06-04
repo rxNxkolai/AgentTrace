@@ -77,6 +77,7 @@ While you work, each Claude Code event runs that runtime, which writes one atomi
 | `agenttrace list` | List recorded runs. |
 | `agenttrace show <run\|latest>` | Print a full run timeline. |
 | `agenttrace receipt <run\|latest>` | Generate a markdown receipt (`-o file` to save it). |
+| `agenttrace export <run\|latest>` | Write a run's `events.jsonl` (`-o file` to copy it). |
 | `agenttrace doctor` | Check the install. Add `--fix` to repair it. |
 | `agenttrace uninstall` | Remove the hooks and runtime. Add `--purge` to delete traces too. |
 

@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest a capture, command, adapter, or risk rule.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What can you not see or do today?
+      placeholder: I cannot tell which runs touched a specific file.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you have in mind
+      placeholder: A `agenttrace list --file src/auth.ts` filter.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Capture (hook runtime)
+        - CLI command
+        - Risk rules
+        - Receipt format
+        - New adapter
+        - Other
+    validations:
+      required: true

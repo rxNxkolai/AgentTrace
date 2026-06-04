@@ -1,0 +1,45 @@
+name: Bug report
+description: Something AgentTrace captured, rendered, or wired up is wrong.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the report. Please do not paste real trace contents that may contain secrets.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what did you get instead?
+      placeholder: I ran `agenttrace receipt latest` and the files list was empty, but the session edited three files.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. agenttrace init
+        2. run a Claude Code session that edits a file
+        3. agenttrace receipt latest
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: AgentTrace version
+      description: Output of `agenttrace --version`.
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: OS and Node version
+      placeholder: Windows 11, Node 20.11
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `agenttrace doctor`
+      description: Paste it here. Redact any path you would rather not share.
+      render: shell

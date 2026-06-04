@@ -5,10 +5,10 @@
 <p align="center"><b>The open-source flight recorder for AI agents.</b></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/license-MIT-22d061" alt="MIT">
+  <a href="https://github.com/rxNxkolai/AgentTrace/actions/workflows/ci.yml"><img src="https://github.com/rxNxkolai/AgentTrace/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22d061" alt="MIT"></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A518-22d061" alt="Node 18+">
   <img src="https://img.shields.io/badge/adapter-Claude%20Code-1bc95a" alt="Claude Code">
-  <img src="https://img.shields.io/badge/tests-33%20passing-1bc95a" alt="33 tests passing">
 </p>
 
 A Claude Code session can edit a dozen files, run commands, install packages, and read a secret by accident, then hand you a diff and a "done." AgentTrace records what happened during that session and writes you a receipt: files changed, commands run, what failed, what looks risky, and what to check before you merge.

@@ -1,87 +1,115 @@
-# AgentTrace
+<p align="center">
+  <img src="assets/brand/logo.png" alt="AgentTrace" width="620">
+</p>
 
-**The open-source flight recorder for AI agents.**
+<p align="center"><b>The open-source flight recorder for AI agents.</b></p>
 
-AI agents edit files, run commands, call tools, and sometimes fail halfway through a task.
-AgentTrace records what a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) session
-actually did and turns it into a readable receipt — so you know what changed, what failed, and
-what needs review.
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-22d061" alt="MIT">
+  <img src="https://img.shields.io/badge/node-%E2%89%A518-22d061" alt="Node 18+">
+  <img src="https://img.shields.io/badge/adapter-Claude%20Code-1bc95a" alt="Claude Code">
+  <img src="https://img.shields.io/badge/tests-33%20passing-1bc95a" alt="33 tests passing">
+</p>
+
+A Claude Code session can edit a dozen files, run commands, install packages, and read a secret by accident, then hand you a diff and a "done." AgentTrace records what happened during that session and writes you a receipt: files changed, commands run, what failed, what looks risky, and what to check before you merge.
 
 ```bash
 npm install -g agenttrace
 cd your-repo
-agenttrace init            # wires Claude Code hooks for this repo
-# … run a normal Claude Code session …
-agenttrace receipt latest  # what just happened?
+agenttrace init            # wire Claude Code hooks for this repo
+# work a normal Claude Code session
+agenttrace receipt latest  # read what just happened
 ```
 
-> Slice one is **CLI-only** and **Claude Code only**. The local dashboard, the generic shell
-> wrapper, and other adapters are planned next slices that reuse the same trace format. See
-> [`docs/superpowers/specs/`](docs/superpowers/specs/) for the design.
+## Why it exists
 
-## What you get
+Today the record of an agent run lives in five places. Some sits in your terminal scrollback, some in the git diff, some in a tool log you never open. You approve the diff and assume the rest was fine.
 
-```
-$ agenttrace list
-RUN          STATUS      STARTED              DUR     FILES  CMDS  RISK
-a1b2c3d4e5f6 success     2026-06-03 19:14:02  8m12s   4      2     medium
+AgentTrace keeps one structured record per session. It captures each tool call, command, and file change as the agent works, then rebuilds the timeline and grades it. You get a black-box recording instead of a guess.
 
-$ agenttrace receipt latest
+## What a receipt looks like
+
+```md
 # AgentTrace Receipt
-- Run: a1b2c3d4e5f6
+- Run: a1b2c3d4
 - Status: Success with warnings
 - Duration: 8m 12s
-...
+
+## Goal
+fix the login bug and run the tests
+
+## Files Changed
+- src/middleware/auth.ts
+- package-lock.json
+
 ## Risk Flags
-- **HIGH:** Auth/session-related file changed: src/middleware/auth.ts
-- **MEDIUM:** Lockfile changed: package-lock.json
+- HIGH: Auth/session-related file changed: src/middleware/auth.ts
+- MEDIUM: Lockfile changed: package-lock.json
+
+## Review Checklist
+- [ ] Review the auth change
+- [ ] Confirm the lockfile change is expected
+- [ ] Run the app locally before merge
+
 ## Final Recommendation
 Review the flagged high-risk changes before merging.
 ```
 
+`agenttrace list` shows every run at a glance, and `agenttrace show <run>` prints the full timeline with each event tagged by risk.
+
 ## How it works
 
-`agenttrace init`:
-1. Creates a local `.agenttrace/` store (and gitignores it).
-2. Copies a tiny self-contained runtime to `.agenttrace/runtime/hook.cjs`.
-3. Registers Claude Code hooks in `.claude/settings.local.json` (merging — your existing hooks
-   are never touched).
+`agenttrace init` does three things:
 
-During a session, each Claude Code lifecycle/tool event invokes the runtime, which writes one
-atomic event file under `.agenttrace/runs/<session_id>/events/`. The capture path is tiny,
-synchronous, **fail-open** (it never breaks or delays your session), and **silent** except a
-capped diagnostics log.
+1. Creates a local `.agenttrace/` store and adds it to `.gitignore`.
+2. Copies a small self-contained runtime to `.agenttrace/runtime/hook.cjs`.
+3. Registers Claude Code hooks in `.claude/settings.local.json`, merging so your existing hooks stay in place.
 
-`list` / `show` / `receipt` read those events back: pairing tool calls, reconstructing the
-timeline (including resumed sessions), assessing risk with a rule table, and rendering a
-sanitized markdown receipt.
+While you work, each Claude Code event runs that runtime, which writes one atomic event file under `.agenttrace/runs/<session-id>/events/`. The capture path is tiny, synchronous, and fail-open. If it ever errors it stays quiet and exits clean, so it never blocks or slows your session. Parallel tool calls each get their own file, so nothing races.
+
+`list`, `show`, and `receipt` read those events back. They pair tool calls by id, rebuild the timeline (resumed sessions included), score risk with a rule table, and render a sanitized markdown receipt.
 
 ## Commands
 
 | Command | What it does |
-|---------|--------------|
-| `agenttrace init` | Wire AgentTrace + Claude Code hooks in this repo. |
-| `agenttrace list [-n N] [--json]` | List recorded runs. |
-| `agenttrace show <run\|latest> [--json]` | Full run timeline. |
-| `agenttrace receipt <run\|latest> [-o file]` | Generate a markdown receipt. |
-| `agenttrace doctor [--fix]` | Verify / repair the install. |
-| `agenttrace uninstall [--purge]` | Remove hooks + runtime (keeps traces unless `--purge`). |
+|---|---|
+| `agenttrace init` | Set up AgentTrace and Claude Code hooks in this repo. |
+| `agenttrace list` | List recorded runs. |
+| `agenttrace show <run\|latest>` | Print a full run timeline. |
+| `agenttrace receipt <run\|latest>` | Generate a markdown receipt (`-o file` to save it). |
+| `agenttrace doctor` | Check the install. Add `--fix` to repair it. |
+| `agenttrace uninstall` | Remove the hooks and runtime. Add `--purge` to delete traces too. |
 
-## Privacy
+## What it records, and what it never records
 
-Traces are local and gitignored by default. The capture path applies tool-aware policies
-(file *contents* are never stored — only paths and change sizes), redacts secret-looking
-values, and caps payload sizes. Receipts are sanitized summaries. Raw traces may still contain
-sensitive command output — review before sharing.
+AgentTrace stores command strings, file paths, change sizes, prompts, and timing. It does not store file contents or full edit bodies. The capture path redacts secret-looking values such as API keys, private key blocks, and bearer tokens, then caps every field. Receipts are summaries built from that sanitized data.
+
+Traces stay local and gitignored by default. Command output can still hold sensitive text, so read a trace before you share it.
+
+Risk grading is a heuristic rule table: `rm -rf`, reading `.env`, pushing to main, touching auth or migration files, installing dependencies, and similar actions. It flags work for review. It never blocks the agent.
+
+## Scope
+
+This is slice one: Claude Code capture and the CLI. It exists to prove one thing, that a recorded session produces a receipt worth reading.
+
+Planned next:
+
+- **Slice 2** — a local dashboard (`agenttrace ui`) with a SQLite index and search.
+- **Slice 3** — a generic `agenttrace run -- <command>` wrapper for any agent or script.
+- **Slice 4** — import adapters for n8n and GitHub Actions.
+
+The trace format carries a version and an escape hatch for unknown events, so each slice lands without breaking the last.
 
 ## Development
 
 ```bash
 npm install
-npm run build      # tsc -> dist/
-npm test           # vitest
+npm run build     # tsc -> dist
+npm test          # vitest (33 tests)
 npm run dev -- list
 ```
+
+The full slice-one design lives in [docs/superpowers/specs/](docs/superpowers/specs/).
 
 ## License
 

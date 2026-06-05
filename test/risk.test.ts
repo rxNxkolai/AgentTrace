@@ -27,6 +27,14 @@ describe("assessRisk", () => {
     expect(events[0]!.risk).toBe("critical");
   });
 
+  it("flags PowerShell recursive force deletes as critical", () => {
+    const events = [ev("command", { command: "Remove-Item -Recurse -Force build" })];
+    const s = assessRisk(events);
+    expect(s.max).toBe("critical");
+    expect(events[0]!.risk).toBe("critical");
+    expect(s.findings[0]!.rule).toBe("powershell-recursive-force-delete");
+  });
+
   it("flags .env writes and reads as critical", () => {
     expect(assessRisk([ev("file_change", { path: ".env" })]).max).toBe("critical");
     expect(
@@ -47,6 +55,13 @@ describe("assessRisk", () => {
   it("detects redacted secrets in command output as high", () => {
     const s = assessRisk([ev("command", { command: "printenv", stdout: "TOKEN=[REDACTED]" })]);
     expect(s.max).toBe("high");
+  });
+
+  it("flags Windows file deletion commands as high", () => {
+    expect(assessRisk([ev("command", { command: "Remove-Item file.txt" })]).max).toBe("high");
+    expect(assessRisk([ev("command", { command: "ri file.txt" })]).max).toBe("high");
+    expect(assessRisk([ev("command", { command: "rmdir build" })]).max).toBe("high");
+    expect(assessRisk([ev("command", { command: "rd /s build" })]).max).toBe("high");
   });
 
   it("returns safe when nothing matches and counts findings", () => {

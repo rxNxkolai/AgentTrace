@@ -11,6 +11,10 @@
   <img src="https://img.shields.io/badge/adapter-Claude%20Code-1bc95a" alt="Claude Code">
 </p>
 
+<p align="center">
+  <img src="assets/brand/demo.gif" alt="AgentTrace: run agenttrace init, work a Claude Code session, then agenttrace receipt latest to see files changed, commands run, and risk flags" width="820">
+</p>
+
 A Claude Code session can edit a dozen files, run commands, install packages, and read a secret by accident, then hand you a diff and a "done." AgentTrace records what happened during that session and writes you a receipt: files changed, commands run, what failed, what looks risky, and what to check before you merge.
 
 ```bash

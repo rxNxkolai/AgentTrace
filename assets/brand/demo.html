@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0b0d0e; --term:#0e1113; --bar:#15191b; --txt:#cdd6d0; --dim:#6b7a70;
+    --green:#3ee07a; --greenhi:#7df7a0; --prompt:#2cd768;
+    --yellow:#e8c44d; --red:#ff6b6b; --cyan:#56d4d0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1200px;height:1000px}
+  body{background:var(--bg);display:flex;align-items:center;justify-content:center;
+    font-family:"JetBrains Mono",monospace}
+  .term{width:1110px;height:920px;background:var(--term);border-radius:14px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 0 0 1px #1d2528;overflow:hidden;
+    display:flex;flex-direction:column}
+  .bar{height:44px;background:var(--bar);display:flex;align-items:center;gap:9px;
+    padding:0 16px;border-bottom:1px solid #1d2528;flex:0 0 auto}
+  .dot{width:13px;height:13px;border-radius:50%}
+  .r{background:#ff5f57}.y{background:#febc2e}.g{background:#28c840}
+  .bar .title{margin-left:14px;color:var(--dim);font-size:14px;font-weight:500}
+  .scr{padding:24px 28px;font-size:17px;line-height:1.55;color:var(--txt);
+    flex:1 1 auto;overflow:hidden}
+  .ln{white-space:pre-wrap;opacity:0}
+  .ln.on{opacity:1}
+  .pr{color:var(--prompt);font-weight:700}
+  .cmd{color:#eafff0;font-weight:500}
+  .dim{color:var(--dim)}
+  .ok{color:var(--green);font-weight:700}
+  .greenhi{color:var(--greenhi)}
+  .h1{color:var(--greenhi);font-weight:700}
+  .key{color:var(--cyan)}
+  .high{color:var(--red);font-weight:700}
+  .med{color:var(--yellow);font-weight:700}
+  .rec{color:var(--greenhi)}
+  .cur{display:inline-block;width:11px;height:20px;background:var(--green);
+    transform:translateY(3px);margin-left:3px;box-shadow:0 0 10px var(--green)}
+  .scan{position:fixed;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0 1px,transparent 1px 3px)}
+</style>
+</head>
+<body>
+  <div class="term">
+    <div class="bar">
+      <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+      <div class="title">agenttrace — ~/myapp</div>
+    </div>
+    <div class="scr" id="scr">
+      <div class="ln" data-s="1"><span class="pr">~/myapp $</span> <span class="cmd">agenttrace init</span></div>
+      <div class="ln" data-s="2"><span class="ok">✓ AgentTrace initialized</span></div>
+      <div class="ln" data-s="2"><span class="dim">  store     .agenttrace/</span></div>
+      <div class="ln" data-s="2"><span class="dim">  runtime   .agenttrace/runtime/hook.cjs</span></div>
+      <div class="ln" data-s="2"><span class="dim">  hooks     .claude/settings.local.json (7 events)</span></div>
+      <div class="ln" data-s="3">&nbsp;</div>
+      <div class="ln" data-s="3"><span class="pr">~/myapp $</span> <span class="cmd">claude "fix the login bug and run the tests"</span></div>
+      <div class="ln" data-s="4"><span class="dim">  ● recording session … editing files, running tests</span></div>
+      <div class="ln" data-s="5">&nbsp;</div>
+      <div class="ln" data-s="5"><span class="pr">~/myapp $</span> <span class="cmd">agenttrace receipt latest</span></div>
+      <div class="ln" data-s="6"><span class="h1"># AgentTrace Receipt</span></div>
+      <div class="ln" data-s="6"><span class="dim">Status:</span> Success with warnings  <span class="dim">·</span>  2 files  <span class="dim">·</span>  risk <span class="high">HIGH</span></div>
+      <div class="ln" data-s="7">&nbsp;</div>
+      <div class="ln" data-s="7"><span class="greenhi">Files changed</span></div>
+      <div class="ln" data-s="7">  src/middleware/auth.ts</div>
+      <div class="ln" data-s="7">  src/auth/session.ts</div>
+      <div class="ln" data-s="7"><span class="greenhi">Commands run</span></div>
+      <div class="ln" data-s="7">  <span class="key">npm install jsonwebtoken</span></div>
+      <div class="ln" data-s="7">  <span class="key">npm test</span></div>
+      <div class="ln" data-s="8">&nbsp;</div>
+      <div class="ln" data-s="8"><span class="greenhi">Risk flags</span></div>
+      <div class="ln" data-s="8">  <span class="high">HIGH</span>  Auth/session file changed: src/middleware/auth.ts</div>
+      <div class="ln" data-s="8">  <span class="high">HIGH</span>  Auth/session file changed: src/auth/session.ts</div>
+      <div class="ln" data-s="8">  <span class="med">MED </span>  Dependencies installed</div>
+      <div class="ln" data-s="9">&nbsp;</div>
+      <div class="ln" data-s="9"><span class="rec">→ Review the flagged high-risk changes before merging.</span> <span class="cur" id="cur"></span></div>
+    </div>
+  </div>
+  <div class="scan"></div>
+<script>
+  function setStep(n){
+    document.querySelectorAll('.ln').forEach(el=>{
+      el.classList.toggle('on', Number(el.dataset.s) <= n);
+    });
+  }
+  window.setStep = setStep;
+  setStep(9); // default: full view
+</script>
+</body>
+</html>

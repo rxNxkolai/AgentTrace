@@ -4,6 +4,15 @@
   "description": "The open-source flight recorder for AI agents. Records what a Claude Code session did and turns it into a readable receipt.",
   "license": "MIT",
   "type": "module",
+  "author": "rxNxkolai (https://github.com/rxNxkolai)",
+  "homepage": "https://github.com/rxNxkolai/AgentTrace#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rxNxkolai/AgentTrace.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rxNxkolai/AgentTrace/issues"
+  },
   "bin": {
     "agenttrace": "dist/cli.js"
   },

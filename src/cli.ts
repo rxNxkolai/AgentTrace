@@ -27,9 +27,10 @@ program
   .command("list")
   .description("List recorded runs.")
   .option("-n, --limit <n>", "max runs to show", (v) => parseInt(v, 10))
+  .option("--since <duration>", "only show runs started within this window (e.g. 30m, 24h, 7d)")
   .option("--json", "output JSON")
   .action((opts) => {
-    runList(process.cwd(), { limit: opts.limit, json: opts.json });
+    runList(process.cwd(), { limit: opts.limit, since: opts.since, json: opts.json });
   });
 
 program

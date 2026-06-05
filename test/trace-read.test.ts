@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { readRun, listRuns, resolveRunId } from "../src/trace/read.js";
+import { readRun, listRuns, resolveRunId, parseSinceOption } from "../src/trace/read.js";
 import type { AgentTraceEvent, EventType } from "../src/schema/types.js";
 
 let root: string;
@@ -97,6 +97,27 @@ describe("readRun", () => {
   });
 });
 
+describe("parseSinceOption", () => {
+  it("returns undefined for no input", () => {
+    expect(parseSinceOption(undefined)).toBeUndefined();
+  });
+  it("parses minutes", () => {
+    expect(parseSinceOption("30m")).toBe(30 * 60 * 1000);
+  });
+  it("parses hours", () => {
+    expect(parseSinceOption("24h")).toBe(24 * 60 * 60 * 1000);
+  });
+  it("parses days", () => {
+    expect(parseSinceOption("7d")).toBe(7 * 24 * 60 * 60 * 1000);
+  });
+  it("throws on 0 minutes", () => {
+    expect(() => parseSinceOption("0m")).toThrow();
+  });
+  it("throws on invalid input", () => {
+    expect(() => parseSinceOption("bad")).toThrow();
+  });
+});
+
 describe("listRuns / resolveRunId", () => {
   it("lists newest-first and resolves latest + prefix", () => {
     write("aaa-old", "run_start", "2026-06-03T09:00:00.000Z", {}, "SessionStart");
@@ -109,5 +130,20 @@ describe("listRuns / resolveRunId", () => {
     expect(resolveRunId(root, "latest")).toBe("bbb-new");
     expect(resolveRunId(root, "aaa")).toBe("aaa-old");
     expect(resolveRunId(root, "zzz")).toBeUndefined();
+  });
+
+  it("filters runs older than --since window", () => {
+    const now = new Date();
+    const recent = new Date(now.getTime() - 10 * 60 * 1000).toISOString();   // 10 min ago
+    const old = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString(); // 48 hours ago
+
+    write("recent-run", "run_start", recent, {}, "SessionStart");
+    write("recent-run", "run_end", new Date(now.getTime() - 9 * 60 * 1000).toISOString(), {}, "SessionEnd");
+    write("old-run", "run_start", old, {}, "SessionStart");
+    write("old-run", "run_end", new Date(now.getTime() - 47 * 60 * 60 * 1000).toISOString(), {}, "SessionEnd");
+
+    const runs = listRuns(root, undefined, "24h");
+    expect(runs.map((r) => r.sessionId)).toContain("recent-run");
+    expect(runs.map((r) => r.sessionId)).not.toContain("old-run");
   });
 });

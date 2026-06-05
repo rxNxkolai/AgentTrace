@@ -33,13 +33,25 @@ function isRead(event: AgentTraceEvent): boolean {
   return event.type === "tool_call" && event.data?.["tool"] === "Read";
 }
 
+const RM_RECURSIVE_FORCE = /\brm\s+-[a-z]*r[a-z]*f|\brm\s+-[a-z]*f[a-z]*r|\brm\s+-rf\b/;
+const POWERSHELL_RECURSIVE_FORCE_DELETE =
+  /\b(?:remove-item|ri)\b(?=[^\n]*\s-recurse\b)(?=[^\n]*\s-force\b)/i;
+const FILE_DELETE_COMMAND =
+  /\brm\s+(?!-[a-z]*[rf])|\bgit\s+rm\b|\bdel\s+|\b(?:remove-item|ri)\b|\brmdir\b|\brd\s+\/s\b/i;
+
 export const RISK_RULES: RiskRule[] = [
   // ---- critical ----
   {
     name: "destructive-recursive-delete",
     level: "critical",
-    test: (e) => isCommand(e) && /\brm\s+-[a-z]*r[a-z]*f|\brm\s+-[a-z]*f[a-z]*r|\brm\s+-rf\b/.test(command(e)),
+    test: (e) => isCommand(e) && RM_RECURSIVE_FORCE.test(command(e)),
     message: () => "Recursive force-delete (rm -rf) executed.",
+  },
+  {
+    name: "powershell-recursive-force-delete",
+    level: "critical",
+    test: (e) => isCommand(e) && POWERSHELL_RECURSIVE_FORCE_DELETE.test(command(e)),
+    message: () => "Recursive force-delete (Remove-Item -Recurse -Force) executed.",
   },
   {
     name: "env-file-write",
@@ -81,7 +93,7 @@ export const RISK_RULES: RiskRule[] = [
   {
     name: "file-deletion",
     level: "high",
-    test: (e) => isCommand(e) && (/\brm\s+(?!-[a-z]*[rf])/.test(command(e)) || /\bgit\s+rm\b/.test(command(e)) || /\bdel\s+/i.test(command(e))),
+    test: (e) => isCommand(e) && FILE_DELETE_COMMAND.test(command(e)),
     message: () => "File deletion command executed.",
   },
   {

@@ -156,7 +156,10 @@ export function listRunIds(root: string): string[] {
 }
 
 /** Lightweight summaries for `list`, sorted newest-first by start time. */
-export function listRuns(root: string, limit?: number): RunSummary[] {
+export function listRuns(root: string, limit?: number, since?: string): RunSummary[] {
+  const sinceMs = parseSinceOption(since);
+  const cutoff = sinceMs !== undefined ? Date.now() - sinceMs : undefined;
+
   const ids = listRunIds(root);
   const summaries: RunSummary[] = ids.map((id) => {
     const run = readRun(root, id);
@@ -173,7 +176,12 @@ export function listRuns(root: string, limit?: number): RunSummary[] {
     };
   });
   summaries.sort((a, b) => (b.startedAt ?? "").localeCompare(a.startedAt ?? ""));
-  return typeof limit === "number" ? summaries.slice(0, limit) : summaries;
+
+  const filtered = cutoff !== undefined
+    ? summaries.filter((s) => s.startedAt ? Date.parse(s.startedAt) >= cutoff : true)
+    : summaries;
+
+  return typeof limit === "number" ? filtered.slice(0, limit) : filtered;
 }
 
 /** Resolve "latest" or a (possibly partial) session id to a concrete run id. */
@@ -195,4 +203,24 @@ export function compactRun(root: string, sessionId: string): string {
   const target = path.join(runsDir(root), sessionId, "events.jsonl");
   fs.writeFileSync(target, events.map((e) => JSON.stringify(e)).join("\n") + "\n", "utf8");
   return target;
+}
+
+/** Parse the `since` option of the list command into milliseconds. */
+export function parseSinceOption(since?: string): number | undefined {
+  if (!since) return undefined;
+
+  const match = /^([1-9]\d*)(m|h|d)$/.exec(since);  // [1-9]\d* instead of \d+ to fail cases such as `0h`
+  if (!match) throw new Error(`Invalid --since value "${since}". Expected format: 30m, 24h, 7d`);
+  const n = parseInt(match[1]!, 10);
+
+  switch (match[2]) {
+    case "m":
+      return n * 60 * 1000;
+    case "h":
+      return n * 60 * 60 * 1000;
+    case "d":
+      return n * 24 * 60 * 60 * 1000;
+    default:
+      throw new Error(`Invalid --since value "${since}". Expected format: 30m, 24h, 7d`);
+  }
 }

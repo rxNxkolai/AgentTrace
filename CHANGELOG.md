@@ -10,6 +10,10 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `agenttrace export <run>` writes a run's sorted `events.jsonl`, with `-o` to copy it
   elsewhere ([#4](https://github.com/rxNxkolai/AgentTrace/pull/4), closes
   [#2](https://github.com/rxNxkolai/AgentTrace/issues/2)).
+- Windows-aware deletion risk rules: `Remove-Item -Recurse -Force` flagged critical;
+  `Remove-Item`/`ri`/`rmdir`/`rd /s` flagged high
+  ([#5](https://github.com/rxNxkolai/AgentTrace/pull/5), closes
+  [#1](https://github.com/rxNxkolai/AgentTrace/issues/1)).
 - Code of conduct, `.gitattributes`, `.editorconfig`, and this changelog.
 
 ## [0.1.0] - 2026-06-04

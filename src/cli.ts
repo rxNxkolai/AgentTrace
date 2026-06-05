@@ -5,6 +5,7 @@ import { printInit, runInit } from "./commands/init.js";
 import { runList } from "./commands/list.js";
 import { runShow } from "./commands/show.js";
 import { runReceipt } from "./commands/receipt.js";
+import { runExport } from "./commands/export.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runUninstall } from "./commands/uninstall.js";
 
@@ -46,6 +47,14 @@ program
   .option("--json", "output the receipt as JSON")
   .action((run, opts) => {
     process.exitCode = runReceipt(process.cwd(), run, { out: opts.out, json: opts.json });
+  });
+
+program
+  .command("export <run>")
+  .description('Export a run events JSONL ("latest" or a run id / prefix).')
+  .option("-o, --out <file>", "copy events.jsonl to a file")
+  .action((run, opts) => {
+    process.exitCode = runExport(process.cwd(), run, { out: opts.out });
   });
 
 program

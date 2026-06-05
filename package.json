@@ -1,5 +1,5 @@
 {
-  "name": "agenttrace",
+  "name": "@rnxkolai/agenttrace",
   "version": "0.1.0",
   "description": "The open-source flight recorder for AI agents. Records what a Claude Code session did and turns it into a readable receipt.",
   "license": "MIT",

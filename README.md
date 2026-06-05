@@ -18,7 +18,7 @@
 A Claude Code session can edit a dozen files, run commands, install packages, and read a secret by accident, then hand you a diff and a "done." AgentTrace records what happened during that session and writes you a receipt: files changed, commands run, what failed, what looks risky, and what to check before you merge.
 
 ```bash
-npm install -g agenttrace
+npm install -g @rnxkolai/agenttrace
 cd your-repo
 agenttrace init            # wire Claude Code hooks for this repo
 # work a normal Claude Code session

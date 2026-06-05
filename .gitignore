@@ -8,3 +8,7 @@ dist/
 
 # npm pack artifacts
 *.tgz
+
+# npm credentials
+.npmrc
+.npmrc.pub

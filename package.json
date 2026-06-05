@@ -18,9 +18,10 @@
   },
   "files": [
     "dist",
-    "assets",
+    "assets/hook.cjs",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=18"

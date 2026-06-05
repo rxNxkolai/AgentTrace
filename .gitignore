@@ -5,3 +5,6 @@ dist/
 
 # AgentTrace local traces (also added to consumer repos by `agenttrace init`)
 .agenttrace/
+
+# npm pack artifacts
+*.tgz

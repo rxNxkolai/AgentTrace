@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AgentTrace</title>
+<style>
+  :root{
+    --bg:#0b0d0e; --panel:#0e1113; --panel2:#12161800; --bar:#15191b; --line:#1d2528;
+    --txt:#cdd6d0; --dim:#7a8a80; --green:#3ee07a; --greenhi:#7df7a0; --cyan:#56d4d0;
+    --crit:#ff5f57; --high:#ff8a5b; --med:#e8c44d; --low:#56d4d0; --safe:#5a6b61;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px}
+  code,.mono{font-family:ui-monospace,"JetBrains Mono",Consolas,monospace}
+  a{color:var(--cyan);text-decoration:none}
+  header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);
+    background:var(--bar);position:sticky;top:0;z-index:5}
+  .brand{font-family:ui-monospace,monospace;font-weight:800;letter-spacing:.5px;font-size:18px;color:var(--greenhi)}
+  .brand b{color:var(--green)}
+  .count{color:var(--dim);font-size:12px}
+  .wrap{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 57px)}
+  .side{border-right:1px solid var(--line);overflow:auto;background:var(--panel)}
+  .controls{padding:12px;position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line)}
+  input,select{width:100%;background:#0a0c0d;border:1px solid var(--line);color:var(--txt);
+    padding:8px 10px;border-radius:8px;font-size:13px;outline:none}
+  input:focus,select:focus{border-color:var(--green)}
+  .filters{display:flex;gap:8px;margin-top:8px}
+  .filters select{width:50%}
+  .run{padding:11px 13px;border-bottom:1px solid var(--line);cursor:pointer}
+  .run:hover{background:#12161a}
+  .run.active{background:#12191c;box-shadow:inset 3px 0 0 var(--green)}
+  .run .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .run .goal{margin-top:3px;color:var(--txt);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .run .meta{margin-top:4px;color:var(--dim);font-size:11.5px;display:flex;gap:10px}
+  .id{font-family:ui-monospace,monospace;color:var(--dim);font-size:11px}
+  .badge{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px}
+  .b-critical{background:rgba(255,95,87,.16);color:var(--crit)}
+  .b-high{background:rgba(255,138,91,.16);color:var(--high)}
+  .b-medium{background:rgba(232,196,77,.15);color:var(--med)}
+  .b-low{background:rgba(86,212,208,.14);color:var(--low)}
+  .b-safe{background:rgba(120,138,128,.14);color:var(--safe)}
+  .st{font-size:11px;font-weight:700}
+  .st-success{color:var(--green)} .st-partial{color:var(--med)} .st-failed{color:var(--crit)} .st-interrupted{color:#c98bff}
+  .main{overflow:auto;padding:24px 28px}
+  .empty{color:var(--dim);padding:60px 20px;text-align:center}
+  h2{margin:0 0 2px;font-size:20px}
+  .sub{color:var(--dim);font-size:12.5px;margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .stat .k{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  .stat .v{font-size:18px;margin-top:4px;font-weight:700}
+  .sec{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--greenhi)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 0;margin-bottom:22px}
+  .row{padding:8px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:baseline}
+  .row:last-child{border-bottom:none}
+  .row .t{color:var(--dim);font-size:11px;font-family:ui-monospace,monospace;min-width:92px}
+  .row .glyph{width:14px;text-align:center;color:var(--green)}
+  .row code{font-size:12.5px;word-break:break-all}
+  ul.plain{margin:0;padding:6px 14px 10px 30px}
+  ul.plain li{margin:3px 0;font-family:ui-monospace,monospace;font-size:12.5px}
+  .flag{padding:7px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
+  .flag:last-child{border-bottom:none}
+  .rec{background:#0d1714;border:1px solid #1f3a2b;border-radius:10px;padding:12px 14px;color:var(--greenhi)}
+  .err{color:var(--crit)}
+</style>
+</head>
+<body>
+  <header>
+    <span class="brand">AGENT<b>TRACE</b></span>
+    <span class="count" id="count"></span>
+    <span style="flex:1"></span>
+    <a href="https://github.com/rxNxkolai/AgentTrace" target="_blank">github ↗</a>
+  </header>
+  <div class="wrap">
+    <aside class="side">
+      <div class="controls">
+        <input id="q" placeholder="Search prompt, command, file, id…" autocomplete="off" />
+        <div class="filters">
+          <select id="risk">
+            <option value="">any risk</option>
+            <option value="critical">critical</option><option value="high">high</option>
+            <option value="medium">medium</option><option value="low">low</option><option value="safe">safe</option>
+          </select>
+          <select id="status">
+            <option value="">any status</option>
+            <option value="success">success</option><option value="partial">partial</option>
+            <option value="failed">failed</option><option value="interrupted">interrupted</option>
+          </select>
+        </div>
+      </div>
+      <div id="list"></div>
+    </aside>
+    <main class="main"><div class="empty" id="detail">Select a run to inspect.</div></main>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+let RUNS=[], current=null;
+
+const esc=(s)=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dur=(ms)=>{ms=ms||0;const s=Math.round(ms/1000);const m=Math.floor(s/60);return m>0?m+"m "+(s%60)+"s":s+"s";};
+const when=(iso)=>iso?iso.replace("T"," ").replace(/\.\d+Z$/,""):"—";
+const clock=(iso)=>{const i=(iso||"").indexOf("T");return i<0?iso:iso.slice(i+1,i+9);};
+const GLYPH={run_start:"▶",prompt:"✎",tool_call:"•",command:"$",file_change:"±",error:"✗",permission:"?",subagent:"⎇",stop:"■",run_end:"◀",passthrough:"·"};
+
+async function load(){
+  const r = await fetch("/api/runs").then(r=>r.json()).catch(()=>({runs:[]}));
+  RUNS = r.runs||[];
+  $("#count").textContent = RUNS.length + " run" + (RUNS.length===1?"":"s");
+  render();
+}
+function filtered(){
+  const q=$("#q").value.trim().toLowerCase(), rk=$("#risk").value, st=$("#status").value;
+  return RUNS.filter(r=>{
+    if(rk && r.maxRisk!==rk) return false;
+    if(st && r.status!==st) return false;
+    if(q){
+      const hay=(r.sessionId+" "+(r.firstPrompt||"")).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+function render(){
+  const rows=filtered();
+  if(!rows.length){ $("#list").innerHTML='<div class="empty">No matching runs.</div>'; return; }
+  $("#list").innerHTML = rows.map(r=>`
+    <div class="run ${current===r.sessionId?'active':''}" data-id="${esc(r.sessionId)}">
+      <div class="top">
+        <span class="id">${esc(r.sessionId.slice(0,14))}</span>
+        <span class="badge b-${esc(r.maxRisk)}">${esc(r.maxRisk)}</span>
+      </div>
+      <div class="goal">${esc(r.firstPrompt||"(no prompt)")}</div>
+      <div class="meta">
+        <span class="st st-${esc(r.status)}">${esc(r.status)}</span>
+        <span>${esc(when(r.startedAt))}</span>
+        <span>${dur(r.durationMs)}</span>
+        <span>${r.fileCount}f · ${r.commandCount}c</span>
+      </div>
+    </div>`).join("");
+  document.querySelectorAll(".run").forEach(el=>el.onclick=()=>open(el.dataset.id));
+}
+async function open(id){
+  current=id; render();
+  const det=$("#detail");
+  det.className="empty"; det.textContent="Loading…";
+  const [rd,rc]=await Promise.all([
+    fetch("/api/runs/"+encodeURIComponent(id)).then(r=>r.json()),
+    fetch("/api/runs/"+encodeURIComponent(id)+"/receipt").then(r=>r.json())
+  ]);
+  const run=rd.run, rcpt=rc.receipt;
+  if(!run){ det.className="empty err"; det.textContent="Run not found."; return; }
+  det.className=""; det.innerHTML=detail(run,rcpt);
+}
+function list(items,fmt){ return items&&items.length ? '<ul class="plain">'+items.map(fmt).join("")+'</ul>' : '<div class="row"><span class="t" style="min-width:0;color:var(--dim)">none</span></div>'; }
+function detail(run,r){
+  const flags=(run.risk&&run.risk.findings)||[];
+  return `
+  <h2>${esc((run.prompts&&run.prompts[0])||"(no prompt captured)")}</h2>
+  <div class="sub mono">${esc(run.sessionId)}</div>
+  <div class="grid">
+    <div class="stat"><div class="k">Status</div><div class="v st-${esc(run.status)}">${esc(run.status)}</div></div>
+    <div class="stat"><div class="k">Risk</div><div class="v"><span class="badge b-${esc(run.risk.max)}">${esc(run.risk.max)}</span></div></div>
+    <div class="stat"><div class="k">Duration</div><div class="v">${dur(run.durationMs)}</div></div>
+    <div class="stat"><div class="k">Files · Cmds</div><div class="v">${run.filesChanged.length} · ${run.commandsRun.length}</div></div>
+  </div>
+
+  ${flags.length?`<div class="sec">Risk flags</div><div class="card">${flags.map(f=>`
+    <div class="flag"><span class="badge b-${esc(f.level)}">${esc(f.level)}</span><span>${esc(f.message)}</span></div>`).join("")}</div>`:""}
+
+  <div class="sec">Files changed</div><div class="card">${list(run.filesChanged,f=>`<li>${esc(f)}</li>`)}</div>
+  <div class="sec">Commands run</div><div class="card">${list(run.commandsRun,c=>`<li><code>${esc(c)}</code></li>`)}</div>
+  ${run.failedSteps&&run.failedSteps.length?`<div class="sec">Failures</div><div class="card">${list(run.failedSteps,f=>`<li class="err">${esc(f)}</li>`)}</div>`:""}
+
+  <div class="sec">Timeline</div>
+  <div class="card">${(run.events||[]).map(e=>`
+    <div class="row">
+      <span class="t">${esc(clock(e.ts))}</span>
+      <span class="glyph">${GLYPH[e.type]||"·"}</span>
+      <code>${esc(e.title)}</code>
+      ${e.risk?`<span style="flex:1"></span><span class="badge b-${esc(e.risk)}">${esc(e.risk)}</span>`:""}
+    </div>`).join("")||'<div class="row"><span class="t">no events</span></div>'}</div>
+
+  ${r?`<div class="sec">Recommendation</div><div class="rec">${esc(r.nextRecommendedAction)}</div>`:""}
+  `;
+}
+$("#q").oninput=render; $("#risk").onchange=render; $("#status").onchange=render;
+load();
+</script>
+</body>
+</html>

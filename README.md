@@ -82,8 +82,17 @@ While you work, each Claude Code event runs that runtime, which writes one atomi
 | `agenttrace show <run\|latest>` | Print a full run timeline. |
 | `agenttrace receipt <run\|latest>` | Generate a markdown receipt (`-o file` to save it). |
 | `agenttrace export <run\|latest>` | Write a run's `events.jsonl` (`-o file` to copy it). |
+| `agenttrace ui` | Open the local dashboard in your browser (`--port`, `--no-open`). |
 | `agenttrace doctor` | Check the install. Add `--fix` to repair it. |
 | `agenttrace uninstall` | Remove the hooks and runtime. Add `--purge` to delete traces too. |
+
+## Dashboard
+
+`agenttrace ui` opens a local web dashboard: every run with its timeline, files, commands, risk flags, and receipt, plus search and filters. No build step, no account, served from your machine.
+
+<p align="center">
+  <img src="assets/brand/dashboard.png" alt="AgentTrace dashboard: a run's risk flags, files changed, commands, and full timeline with per-event risk badges" width="900">
+</p>
 
 ## What it records, and what it never records
 
@@ -93,13 +102,15 @@ Traces stay local and gitignored by default. Command output can still hold sensi
 
 Risk grading is a heuristic rule table: `rm -rf`, reading `.env`, pushing to main, touching auth or migration files, installing dependencies, and similar actions. It flags work for review. It never blocks the agent.
 
-## Scope
+## Status
 
-This is slice one: Claude Code capture and the CLI. It exists to prove one thing, that a recorded session produces a receipt worth reading.
+Shipped:
+
+- **Slice 1** — Claude Code capture and the CLI.
+- **Slice 2** — the local dashboard (`agenttrace ui`).
 
 Planned next:
 
-- **Slice 2** — a local dashboard (`agenttrace ui`) with a SQLite index and search.
 - **Slice 3** — a generic `agenttrace run -- <command>` wrapper for any agent or script.
 - **Slice 4** — import adapters for n8n and GitHub Actions.
 
@@ -110,7 +121,7 @@ The trace format carries a version and an escape hatch for unknown events, so ea
 ```bash
 npm install
 npm run build     # tsc -> dist
-npm test          # vitest (33 tests)
+npm test          # vitest (49 tests)
 npm run dev -- list
 ```
 

@@ -7,6 +7,9 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **Local dashboard** (`agenttrace ui`): a zero-dependency HTTP server and single-page UI
+  showing the run list, per-run timeline, files, commands, risk flags, and receipt, with
+  search and risk/status filters. Reuses the existing trace reader; no SQLite or build step.
 - `agenttrace export <run>` writes a run's sorted `events.jsonl`, with `-o` to copy it
   elsewhere ([#4](https://github.com/rxNxkolai/AgentTrace/pull/4), closes
   [#2](https://github.com/rxNxkolai/AgentTrace/issues/2)).

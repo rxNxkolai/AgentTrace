@@ -6,6 +6,7 @@ import { runList } from "./commands/list.js";
 import { runShow } from "./commands/show.js";
 import { runReceipt } from "./commands/receipt.js";
 import { runExport } from "./commands/export.js";
+import { runUi } from "./commands/ui.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runUninstall } from "./commands/uninstall.js";
 
@@ -56,6 +57,15 @@ program
   .option("-o, --out <file>", "copy events.jsonl to a file")
   .action((run, opts) => {
     process.exitCode = runExport(process.cwd(), run, { out: opts.out });
+  });
+
+program
+  .command("ui")
+  .description("Open the local dashboard in a browser.")
+  .option("-p, --port <n>", "port to listen on", (v) => parseInt(v, 10))
+  .option("--no-open", "do not auto-open the browser")
+  .action((opts) => {
+    process.exitCode = runUi(process.cwd(), { port: opts.port, open: opts.open });
   });
 
 program

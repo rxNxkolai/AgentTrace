@@ -19,6 +19,7 @@
   "files": [
     "dist",
     "assets/hook.cjs",
+    "assets/dashboard.html",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"

@@ -6,10 +6,15 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-05
+
 ### Added
 - **Local dashboard** (`agenttrace ui`): a zero-dependency HTTP server and single-page UI
   showing the run list, per-run timeline, files, commands, risk flags, and receipt, with
   search and risk/status filters. Reuses the existing trace reader; no SQLite or build step.
+- `agenttrace list --since <30m|24h|7d>` filters runs to a recent window
+  ([#6](https://github.com/rxNxkolai/AgentTrace/pull/6), closes
+  [#3](https://github.com/rxNxkolai/AgentTrace/issues/3)).
 - `agenttrace export <run>` writes a run's sorted `events.jsonl`, with `-o` to copy it
   elsewhere ([#4](https://github.com/rxNxkolai/AgentTrace/pull/4), closes
   [#2](https://github.com/rxNxkolai/AgentTrace/issues/2)).
@@ -33,5 +38,6 @@ First slice: Claude Code capture and the CLI.
 - Sanitized markdown receipts.
 - Terminal-style logo, README, and the slice-one design doc.
 
-[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rxNxkolai/AgentTrace/releases/tag/v0.1.0

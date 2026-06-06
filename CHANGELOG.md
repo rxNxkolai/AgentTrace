@@ -6,6 +6,20 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-06
+
+### Added
+- **`agenttrace run -- <command>`** — record any command as a run, not just Claude Code.
+  Streams output live while capturing it, snapshots git changes, grades risk, and writes the
+  same trace format. Works with Aider, Cline, Codex, plain shell scripts, anything.
+- **Reversibility-aware risk** ([#7](https://github.com/rxNxkolai/AgentTrace/issues/7)): every
+  flag now carries a reversibility signal (reversible / recoverable / irreversible), surfaced
+  in receipts as `(irreversible)`. New rules for **outbound network calls with side effects**
+  (push / deploy / POST) and **writes outside the project directory**.
+
+### Changed
+- Receipts show the correct adapter (`Shell (run)` vs `Claude Code`).
+
 ## [0.2.0] - 2026-06-05
 
 ### Added
@@ -38,6 +52,7 @@ First slice: Claude Code capture and the CLI.
 - Sanitized markdown receipts.
 - Terminal-style logo, README, and the slice-one design doc.
 
-[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rxNxkolai/AgentTrace/releases/tag/v0.1.0

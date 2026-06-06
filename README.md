@@ -78,6 +78,7 @@ While you work, each Claude Code event runs that runtime, which writes one atomi
 | Command | What it does |
 |---|---|
 | `agenttrace init` | Set up AgentTrace and Claude Code hooks in this repo. |
+| `agenttrace run -- <command>` | Record any command as a run (any agent or script). |
 | `agenttrace list` | List recorded runs. |
 | `agenttrace show <run\|latest>` | Print a full run timeline. |
 | `agenttrace receipt <run\|latest>` | Generate a markdown receipt (`-o file` to save it). |
@@ -85,6 +86,18 @@ While you work, each Claude Code event runs that runtime, which writes one atomi
 | `agenttrace ui` | Open the local dashboard in your browser (`--port`, `--no-open`). |
 | `agenttrace doctor` | Check the install. Add `--fix` to repair it. |
 | `agenttrace uninstall` | Remove the hooks and runtime. Add `--purge` to delete traces too. |
+
+## Any agent, not just Claude Code
+
+The hooks adapter gives the richest trace for Claude Code. For anything else, wrap the command:
+
+```bash
+agenttrace run -- npm test
+agenttrace run -- aider --message "add retries"
+agenttrace run -- python agent.py
+```
+
+`run` records the command, streams its output live while capturing it, snapshots what changed in git, grades the risk, and writes the same kind of run you get from a Claude Code session. It works with Aider, Cline, Codex, a plain shell script, or anything that runs in a terminal.
 
 ## Dashboard
 
@@ -100,7 +113,7 @@ AgentTrace stores command strings, file paths, change sizes, prompts, and timing
 
 Traces stay local and gitignored by default. Command output can still hold sensitive text, so read a trace before you share it.
 
-Risk grading is a heuristic rule table: `rm -rf`, reading `.env`, pushing to main, touching auth or migration files, installing dependencies, and similar actions. It flags work for review. It never blocks the agent.
+Risk grading is a heuristic rule table: `rm -rf`, reading `.env`, pushing to main, deploys and outbound calls that change state, writes outside the project dir, touching auth or migration files, installing dependencies, and similar actions. Each flag also carries a **reversibility** signal (reversible / recoverable / irreversible), because the question that matters is "can I undo this?" not "did it look scary?" It flags work for review. It never blocks the agent.
 
 ## Status
 
@@ -108,11 +121,12 @@ Shipped:
 
 - **Slice 1** — Claude Code capture and the CLI.
 - **Slice 2** — the local dashboard (`agenttrace ui`).
+- **Slice 3** — `agenttrace run -- <command>`, the generic wrapper for any agent or script.
 
 Planned next:
 
-- **Slice 3** — a generic `agenttrace run -- <command>` wrapper for any agent or script.
 - **Slice 4** — import adapters for n8n and GitHub Actions.
+- A reversibility-first risk pass and per-agent adapters (Aider, Cline) — see the open issues.
 
 The trace format carries a version and an escape hatch for unknown events, so each slice lands without breaking the last.
 
@@ -121,7 +135,7 @@ The trace format carries a version and an escape hatch for unknown events, so ea
 ```bash
 npm install
 npm run build     # tsc -> dist
-npm test          # vitest (49 tests)
+npm test          # vitest (56 tests)
 npm run dev -- list
 ```
 

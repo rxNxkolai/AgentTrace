@@ -57,6 +57,25 @@ describe("assessRisk", () => {
     expect(s.max).toBe("high");
   });
 
+  it("flags outbound side-effectful network calls as high + irreversible", () => {
+    for (const cmd of ["git push origin feature", "vercel deploy --prod", "curl -X POST https://api.x/create"]) {
+      const s = assessRisk([ev("command", { command: cmd })]);
+      expect(s.max).toBe("high");
+      expect(s.findings[0]!.reversibility).toBe("irreversible");
+    }
+  });
+
+  it("flags writes outside the project dir as medium", () => {
+    expect(assessRisk([ev("command", { command: "git config --global user.email a@b.c" })]).max).toBe("medium");
+    expect(assessRisk([ev("command", { command: "cp secrets ~/.ssh/key" })]).max).toBe("medium");
+  });
+
+  it("tags reversibility on findings", () => {
+    expect(assessRisk([ev("command", { command: "rm -rf build" })]).findings[0]!.reversibility).toBe("irreversible");
+    expect(assessRisk([ev("file_change", { path: "docs/x.md" })]).findings[0]!.reversibility).toBe("reversible");
+    expect(assessRisk([ev("command", { command: "npm install x" })]).findings[0]!.reversibility).toBe("recoverable");
+  });
+
   it("flags Windows file deletion commands as high", () => {
     expect(assessRisk([ev("command", { command: "Remove-Item file.txt" })]).max).toBe("high");
     expect(assessRisk([ev("command", { command: "ri file.txt" })]).max).toBe("high");

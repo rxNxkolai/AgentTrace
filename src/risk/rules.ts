@@ -1,8 +1,10 @@
-import type { AgentTraceEvent, RiskLevel } from "../schema/types.js";
+import type { AgentTraceEvent, Reversibility, RiskLevel } from "../schema/types.js";
 
 export interface RiskRule {
   name: string;
   level: RiskLevel;
+  /** Whether the action can be undone. The axis a reviewer actually cares about. */
+  reversibility?: Reversibility;
   test: (event: AgentTraceEvent) => boolean;
   message: (event: AgentTraceEvent) => string;
 }
@@ -38,12 +40,17 @@ const POWERSHELL_RECURSIVE_FORCE_DELETE =
   /\b(?:remove-item|ri)\b(?=[^\n]*\s-recurse\b)(?=[^\n]*\s-force\b)/i;
 const FILE_DELETE_COMMAND =
   /\brm\s+(?!-[a-z]*[rf])|\bgit\s+rm\b|\bdel\s+|\b(?:remove-item|ri)\b|\brmdir\b|\brd\s+\/s\b/i;
+const OUTBOUND_SIDE_EFFECT =
+  /\b(?:curl|wget)\b[^\n]*(?:-X\s*(?:POST|PUT|PATCH|DELETE)|--data(?:-raw)?\b|\s-d\s)|\bgit\s+push\b|\bgh\s+release\s+create\b|\b(?:vercel|netlify|fly|wrangler|railway)\s+deploy\b|\bvercel\b[^\n]*--prod/i;
+const OUT_OF_PROJECT_WRITE =
+  /(?:>>?\s*(?:~|\$HOME|\/etc\/|\/usr\/|\/opt\/)|\b(?:cp|mv)\b[^\n]*\s(?:~\/|\$HOME\/|\/etc\/)|\bgit\s+config\s+--global\b|\bnpm\s+config\s+set\b|\bsetx\b)/i;
 
 export const RISK_RULES: RiskRule[] = [
   // ---- critical ----
   {
     name: "destructive-recursive-delete",
     level: "critical",
+    reversibility: "irreversible",
     test: (e) => isCommand(e) && RM_RECURSIVE_FORCE.test(command(e)),
     message: () => "Recursive force-delete (rm -rf) executed.",
   },
@@ -68,20 +75,30 @@ export const RISK_RULES: RiskRule[] = [
   {
     name: "push-to-main",
     level: "critical",
+    reversibility: "irreversible",
     test: (e) => isCommand(e) && /git\s+push\b[^\n]*\b(main|master)\b/.test(command(e)),
     message: () => "Pushed to main/master branch.",
   },
   {
     name: "package-publish",
     level: "critical",
+    reversibility: "irreversible",
     test: (e) => isCommand(e) && /\b(npm|yarn|pnpm)\s+publish\b/.test(command(e)),
     message: () => "Package publish command executed.",
   },
   {
     name: "destructive-db",
     level: "critical",
+    reversibility: "irreversible",
     test: (e) => isCommand(e) && /\b(drop\s+(table|database)|truncate\s+table)\b/i.test(command(e)),
     message: () => "Destructive database command (DROP/TRUNCATE).",
+  },
+  {
+    name: "outbound-network-side-effect",
+    level: "high",
+    reversibility: "irreversible",
+    test: (e) => isCommand(e) && OUTBOUND_SIDE_EFFECT.test(command(e)),
+    message: () => "Outbound network call with side effects (push / deploy / POST). Hard to undo.",
   },
   // ---- high ----
   {
@@ -93,6 +110,7 @@ export const RISK_RULES: RiskRule[] = [
   {
     name: "file-deletion",
     level: "high",
+    reversibility: "irreversible",
     test: (e) => isCommand(e) && FILE_DELETE_COMMAND.test(command(e)),
     message: () => "File deletion command executed.",
   },
@@ -116,8 +134,16 @@ export const RISK_RULES: RiskRule[] = [
   },
   // ---- medium ----
   {
+    name: "out-of-project-write",
+    level: "medium",
+    reversibility: "recoverable",
+    test: (e) => isCommand(e) && OUT_OF_PROJECT_WRITE.test(command(e)),
+    message: () => "Write outside the project directory (home / system / global config).",
+  },
+  {
     name: "dependency-install",
     level: "medium",
+    reversibility: "recoverable",
     test: (e) => isCommand(e) && /\b((npm|pnpm)\s+(install|add|i)\b|yarn\s+add\b|pip\s+install\b|poetry\s+add\b)/.test(command(e)),
     message: () => "Dependencies installed/added.",
   },
@@ -143,6 +169,7 @@ export const RISK_RULES: RiskRule[] = [
   {
     name: "docs-changed",
     level: "low",
+    reversibility: "reversible",
     test: (e) => isFileChange(e) && /(\.(md|mdx|txt|rst)$|(^|\/)docs\/)/i.test(normPath(e)),
     message: (e) => `Docs changed: ${pathOf(e)}`,
   },

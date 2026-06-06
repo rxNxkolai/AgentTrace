@@ -40,6 +40,7 @@ export function assessRisk(events: AgentTraceEvent[]): RiskSummary {
       eventLevel = eventLevel ? maxLevel(eventLevel, rule.level) : rule.level;
       const finding: RiskFinding = {
         level: rule.level,
+        reversibility: rule.reversibility,
         rule: rule.name,
         message: safeMessage(rule, event),
         eventTs: event.ts,

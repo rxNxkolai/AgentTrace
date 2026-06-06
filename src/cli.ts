@@ -5,6 +5,7 @@ import { printInit, runInit } from "./commands/init.js";
 import { runList } from "./commands/list.js";
 import { runShow } from "./commands/show.js";
 import { runReceipt } from "./commands/receipt.js";
+import { runRun } from "./commands/run.js";
 import { runExport } from "./commands/export.js";
 import { runUi } from "./commands/ui.js";
 import { runDoctor } from "./commands/doctor.js";
@@ -22,6 +23,14 @@ program
   .description("Initialize AgentTrace in this repo and wire Claude Code hooks.")
   .action(() => {
     printInit(runInit(process.cwd()));
+  });
+
+program
+  .command("run")
+  .description("Record any command as a run (any agent or script). Use: agenttrace run -- <command>")
+  .argument("<command...>", "command to run, e.g. -- npm test")
+  .action(async (command: string[]) => {
+    process.exitCode = await runRun(process.cwd(), command);
   });
 
 program

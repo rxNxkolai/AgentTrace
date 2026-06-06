@@ -12,6 +12,7 @@ export function generateReceipt(run: Run): Receipt {
 
   return {
     sessionId: run.sessionId,
+    source: run.source,
     goal,
     status: run.status,
     startedAt: run.startedAt,
@@ -97,7 +98,8 @@ export function renderReceiptMarkdown(r: Receipt): string {
   lines.push(`- **Status:** ${STATUS_LABEL[r.status]}`);
   lines.push(`- **Started:** ${fmtTime(r.startedAt)}`);
   lines.push(`- **Duration:** ${fmtDuration(r.durationMs)}`);
-  lines.push(`- **Adapter:** Claude Code`, "");
+  const adapter = r.source === "shell" ? "Shell (`run`)" : "Claude Code";
+  lines.push(`- **Adapter:** ${adapter}`, "");
 
   lines.push("## Goal", "", r.goal, "");
 
@@ -113,7 +115,11 @@ export function renderReceiptMarkdown(r: Receipt): string {
 
   lines.push("## Risk Flags", "");
   if (r.riskyActions.length === 0) lines.push("_No medium-or-higher risk flags._");
-  else for (const f of r.riskyActions) lines.push(`- **${f.level.toUpperCase()}:** ${f.message}`);
+  else
+    for (const f of r.riskyActions) {
+      const tag = f.reversibility === "irreversible" ? " _(irreversible)_" : "";
+      lines.push(`- **${f.level.toUpperCase()}:**${tag} ${f.message}`);
+    }
   lines.push("");
 
   lines.push("## Failures", "");

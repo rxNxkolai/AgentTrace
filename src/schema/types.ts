@@ -8,6 +8,9 @@ export const SCHEMA_VERSION = 1 as const;
 
 export type RiskLevel = "safe" | "low" | "medium" | "high" | "critical";
 
+/** Whether an action can be undone. The axis that matters most for review. */
+export type Reversibility = "reversible" | "recoverable" | "irreversible";
+
 export const RISK_ORDER: Record<RiskLevel, number> = {
   safe: 0,
   low: 1,
@@ -31,7 +34,7 @@ export type EventType =
   | "passthrough";
 
 /** The source agent/adapter that produced an event. */
-export type EventSource = "claude-code";
+export type EventSource = "claude-code" | "shell";
 
 /**
  * One captured event — the on-disk shape written by the hook runtime
@@ -77,6 +80,7 @@ export type RunStatus = "success" | "failed" | "partial" | "interrupted";
 /** A risk finding attached to a specific event. */
 export interface RiskFinding {
   level: RiskLevel;
+  reversibility?: Reversibility;
   rule: string;
   message: string;
   eventTs: string;
@@ -112,6 +116,7 @@ export interface Run {
 
 export interface Receipt {
   sessionId: string;
+  source: EventSource;
   goal: string;
   status: RunStatus;
   startedAt?: string;

@@ -135,7 +135,7 @@ export function readRun(root: string, sessionId: string): Run {
 
   return {
     sessionId,
-    source: "claude-code",
+    source: (events[0]?.source as Run["source"]) ?? "claude-code",
     cwd,
     segments,
     startedAt,

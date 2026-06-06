@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/brand/demo.gif" alt="AgentTrace: run agenttrace init, work a Claude Code session, then agenttrace receipt latest to see files changed, commands run, and risk flags" width="820">
+  <img src="assets/brand/launch.gif" alt="Your agent says 'done, tests passing.' AgentTrace shows what it actually did: pushed to main, read .env, deleted untracked files — flagged critical and irreversible." width="860">
 </p>
 
 A Claude Code session can edit a dozen files, run commands, install packages, and read a secret by accident, then hand you a diff and a "done." AgentTrace records what happened during that session and writes you a receipt: files changed, commands run, what failed, what looks risky, and what to check before you merge.

@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#07080a; --term:#0e1113; --bar:#15191b; --line:#1d2528;
+    --txt:#cdd6d0; --dim:#6b7a70; --green:#3ee07a; --greenhi:#8df7a8; --cyan:#56d4d0;
+    --crit:#ff5f57; --high:#ff8a5b; --med:#e8c44d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1280px;height:720px}
+  body{background:var(--bg);display:flex;align-items:center;justify-content:center;
+    font-family:"JetBrains Mono",monospace}
+  .term{width:1180px;height:640px;background:var(--term);border-radius:14px;
+    box-shadow:0 30px 90px rgba(0,0,0,.65),inset 0 0 0 1px #1d2528;overflow:hidden;display:flex;flex-direction:column}
+  .bar{height:44px;background:var(--bar);display:flex;align-items:center;gap:9px;padding:0 16px;border-bottom:1px solid var(--line);flex:0 0 auto}
+  .dot{width:13px;height:13px;border-radius:50%}.r{background:#ff5f57}.y{background:#febc2e}.g{background:#28c840}
+  .bar .title{margin-left:14px;color:var(--dim);font-size:14px;font-weight:500}
+  .scr{padding:26px 30px;font-size:19px;line-height:1.62;color:var(--txt);flex:1 1 auto;overflow:hidden}
+  .ln{white-space:pre-wrap;opacity:0}.ln.on{opacity:1}
+  .pr{color:var(--green);font-weight:700}
+  .cmd{color:#eafff0;font-weight:600}
+  .agent{color:var(--green)}
+  .dim{color:var(--dim)}
+  .h1{color:var(--greenhi);font-weight:700}
+  .critword{color:var(--crit);font-weight:700}
+  .flag{display:flex;gap:12px;align-items:baseline;margin:2px 0}
+  .lv{font-weight:700;min-width:92px}
+  .lv.c{color:var(--crit)} .lv.h{color:var(--high)} .lv.m{color:var(--med)}
+  .irr{color:var(--crit);font-size:13px;border:1px solid rgba(255,95,87,.4);border-radius:5px;padding:0 6px;margin-right:4px}
+  .rec{color:var(--crit);font-weight:700}
+  .cur{display:inline-block;width:11px;height:21px;background:var(--green);transform:translateY(4px);margin-left:3px;box-shadow:0 0 10px var(--green)}
+  .scan{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px)}
+</style>
+</head>
+<body>
+  <div class="term">
+    <div class="bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+      <div class="title">agenttrace — your agent said "done" ✓</div></div>
+    <div class="scr" id="scr">
+      <div class="ln" data-s="1"><span class="pr">~/app $</span> <span class="cmd">claude "refactor auth and ship it"</span></div>
+      <div class="ln" data-s="2"><span class="agent">  ✓ Done. 6 files changed, tests passing.</span></div>
+      <div class="ln" data-s="3">&nbsp;</div>
+      <div class="ln" data-s="3"><span class="pr">~/app $</span> <span class="cmd">agenttrace receipt latest</span></div>
+      <div class="ln" data-s="4"><span class="h1"># AgentTrace Receipt</span></div>
+      <div class="ln" data-s="4"><span class="dim">status</span> success   <span class="dim">·</span>   risk <span class="critword">CRITICAL</span></div>
+      <div class="ln" data-s="5">&nbsp;</div>
+      <div class="ln" data-s="5"><span class="dim">⚠ what it actually did</span></div>
+      <div class="ln flag" data-s="5"><span class="lv c">CRITICAL</span><span><span class="irr">irreversible</span> pushed to <b>main</b></span></div>
+      <div class="ln flag" data-s="6"><span class="lv c">CRITICAL</span><span><span class="irr">irreversible</span> read <b>.env</b></span></div>
+      <div class="ln flag" data-s="6"><span class="lv h">HIGH</span><span><span class="irr">irreversible</span> deleted <b>src/legacy/</b> (untracked)</span></div>
+      <div class="ln flag" data-s="7"><span class="lv m">MEDIUM</span><span>installed 3 dependencies</span></div>
+      <div class="ln" data-s="8">&nbsp;</div>
+      <div class="ln" data-s="8"><span class="rec">→ Do NOT auto-merge. Critical, irreversible actions detected.</span> <span class="cur"></span></div>
+    </div>
+  </div>
+  <div class="scan"></div>
+<script>
+  function setStep(n){document.querySelectorAll('.ln').forEach(el=>el.classList.toggle('on',Number(el.dataset.s)<=n));}
+  window.setStep=setStep; setStep(8);
+</script>
+</body>
+</html>

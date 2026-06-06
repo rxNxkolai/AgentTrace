@@ -151,7 +151,7 @@ The trace format carries a version and an escape hatch for unknown events, so ea
 ```bash
 npm install
 npm run build     # tsc -> dist
-npm test          # vitest (63 tests)
+npm test          # vitest (67 tests)
 npm run dev -- list
 ```
 

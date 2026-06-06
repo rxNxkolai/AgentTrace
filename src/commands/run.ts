@@ -7,7 +7,7 @@ import {
   gitBranch,
   gitHead,
   gitStatusPorcelain,
-  changedPathsBetweenStatus,
+  changedEntriesBetweenStatus,
 } from "../util/git.js";
 import { pc } from "../render/colors.js";
 import { riskColor } from "../render/colors.js";
@@ -26,7 +26,11 @@ function genRunId(): string {
 }
 
 function reconstruct(args: string[]): string {
-  return args.map((a) => (/\s/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a)).join(" ");
+  // Quote args containing whitespace OR cmd.exe metacharacters (parens, &, |, <, >, ^, quotes),
+  // so commands like: node -e "require('fs')..." survive the Windows shell.
+  return args
+    .map((a) => (/[\s()&|<>^"'`%!]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a))
+    .join(" ");
 }
 
 /** `agenttrace run -- <command>`: record any command as a shell-sourced run. */
@@ -92,17 +96,19 @@ export function runRun(root: string, cmd: string[]): Promise<number> {
       });
 
       // file changes attributable to the command (status delta), excluding our own store
-      const changed = changedPathsBetweenStatus(beforeStatus, gitStatusPorcelain(cwd)).filter(
-        (p) => !p.replace(/\\/g, "/").startsWith(".agenttrace/"),
+      const entries = changedEntriesBetweenStatus(beforeStatus, gitStatusPorcelain(cwd)).filter(
+        (e) => !e.path.replace(/\\/g, "/").startsWith(".agenttrace/"),
       );
-      for (const p of changed) {
+      for (const { path: p, status } of entries) {
+        const deleted = /D/.test(status);
+        const tracked = status.trim() !== "??";
         writeEvent(root, id, {
           ts: endedAt,
           type: "file_change",
           source: "shell",
           hookEvent: "run",
-          title: `Changed: ${p}`,
-          data: { path: p },
+          title: `${deleted ? "Deleted" : "Changed"}: ${p}`,
+          data: { path: p, gitStatus: status.trim(), deleted, tracked },
           sourcePayloadSanitized: {},
           risk: null,
         });

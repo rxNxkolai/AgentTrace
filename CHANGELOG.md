@@ -6,6 +6,18 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-06
+
+### Added
+- **Context-aware reversibility** ([#8](https://github.com/rxNxkolai/AgentTrace/issues/8)): the
+  `run` adapter reads git status, so deleting a *tracked* file is graded recoverable while an
+  *untracked* one is irreversible. Same delete, different risk.
+
+### Fixed
+- `git` output was trimmed on both ends, stripping the leading space of porcelain status codes
+  and corrupting `run`'s changed-file paths (e.g. `config.ts` became `onfig.ts`, deletions went
+  undetected). Now trims trailing whitespace only.
+
 ## [0.4.0] - 2026-06-06
 
 ### Added
@@ -64,7 +76,8 @@ First slice: Claude Code capture and the CLI.
 - Sanitized markdown receipts.
 - Terminal-style logo, README, and the slice-one design doc.
 
-[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.1.0...v0.2.0

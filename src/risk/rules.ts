@@ -115,6 +115,13 @@ export const RISK_RULES: RiskRule[] = [
     message: () => "File deletion command executed.",
   },
   {
+    name: "untracked-file-deleted",
+    level: "high",
+    reversibility: "irreversible",
+    test: (e) => isFileChange(e) && e.data?.["deleted"] === true && e.data?.["tracked"] === false,
+    message: (e) => `Deleted an untracked file, not recoverable: ${pathOf(e)}`,
+  },
+  {
     name: "auth-files-touched",
     level: "high",
     test: (e) => isFileChange(e) && /(auth|session|middleware|login|password|credential)/i.test(normPath(e)),
@@ -139,6 +146,13 @@ export const RISK_RULES: RiskRule[] = [
     reversibility: "recoverable",
     test: (e) => isCommand(e) && OUT_OF_PROJECT_WRITE.test(command(e)),
     message: () => "Write outside the project directory (home / system / global config).",
+  },
+  {
+    name: "tracked-file-deleted",
+    level: "medium",
+    reversibility: "recoverable",
+    test: (e) => isFileChange(e) && e.data?.["deleted"] === true && e.data?.["tracked"] === true,
+    message: (e) => `Deleted a tracked file, recoverable via git: ${pathOf(e)}`,
   },
   {
     name: "dependency-install",

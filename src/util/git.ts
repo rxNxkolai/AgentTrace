@@ -7,7 +7,7 @@ function git(cwd: string, args: string[]): string | undefined {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
       timeout: 4000,
-    }).trim();
+    }).replace(/\s+$/, ""); // trailing only — porcelain status codes can start with a space
   } catch {
     return undefined;
   }
@@ -40,6 +40,30 @@ export function changedPathsBetweenStatus(before: string[], after: string[]): st
     if (!beforeSet.has(line)) changed.add(norm(line));
   }
   return [...changed].filter((p) => p.length > 0);
+}
+
+/**
+ * Like changedPathsBetweenStatus, but keeps the porcelain XY status code per path so callers
+ * can reason about tracked-ness and deletion (for reversibility grading).
+ */
+export function changedEntriesBetweenStatus(
+  before: string[],
+  after: string[],
+): { path: string; status: string }[] {
+  const beforeSet = new Set(before);
+  const out: { path: string; status: string }[] = [];
+  for (const line of after) {
+    if (beforeSet.has(line)) continue;
+    // porcelain v1: "XY <path>" (XY = 2 status chars, then whitespace, then path).
+    const m = /^(..)\s+(.*)$/.exec(line);
+    if (!m) continue;
+    const status = m[1]!;
+    let path = m[2]!.trim().replace(/^"|"$/g, "");
+    const arrow = path.indexOf(" -> "); // renames: "old -> new"
+    if (arrow >= 0) path = path.slice(arrow + 4);
+    if (path) out.push({ path, status });
+  }
+  return out;
 }
 
 /** Supplemental: files changed between two commits (best-effort). */

@@ -70,6 +70,16 @@ describe("assessRisk", () => {
     expect(assessRisk([ev("command", { command: "cp secrets ~/.ssh/key" })]).max).toBe("medium");
   });
 
+  it("grades deletions by git context (tracked = recoverable, untracked = irreversible)", () => {
+    const tracked = assessRisk([ev("file_change", { path: "src/a.ts", deleted: true, tracked: true })]);
+    expect(tracked.max).toBe("medium");
+    expect(tracked.findings[0]!.reversibility).toBe("recoverable");
+
+    const untracked = assessRisk([ev("file_change", { path: "scratch.ts", deleted: true, tracked: false })]);
+    expect(untracked.max).toBe("high");
+    expect(untracked.findings[0]!.reversibility).toBe("irreversible");
+  });
+
   it("tags reversibility on findings", () => {
     expect(assessRisk([ev("command", { command: "rm -rf build" })]).findings[0]!.reversibility).toBe("irreversible");
     expect(assessRisk([ev("file_change", { path: "docs/x.md" })]).findings[0]!.reversibility).toBe("reversible");

@@ -14,6 +14,7 @@ import { changedFilesBetween } from "../util/git.js";
 
 export interface RunSummary {
   sessionId: string;
+  source: Run["source"];
   status: RunStatus;
   startedAt?: string;
   endedAt?: string;
@@ -165,6 +166,7 @@ export function listRuns(root: string, limit?: number, since?: string): RunSumma
     const run = readRun(root, id);
     return {
       sessionId: id,
+      source: run.source,
       status: run.status,
       startedAt: run.startedAt,
       endedAt: run.endedAt,

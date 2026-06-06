@@ -7,6 +7,7 @@ import { runShow } from "./commands/show.js";
 import { runReceipt } from "./commands/receipt.js";
 import { runRun } from "./commands/run.js";
 import { runExport } from "./commands/export.js";
+import { runImport } from "./commands/import.js";
 import { runUi } from "./commands/ui.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runUninstall } from "./commands/uninstall.js";
@@ -66,6 +67,14 @@ program
   .option("-o, --out <file>", "copy events.jsonl to a file")
   .action((run, opts) => {
     process.exitCode = runExport(process.cwd(), run, { out: opts.out });
+  });
+
+program
+  .command("import <file>")
+  .description("Import an external trace (--adapter github-actions|n8n).")
+  .requiredOption("--adapter <name>", "github-actions or n8n")
+  .action((file, opts) => {
+    process.exitCode = runImport(process.cwd(), file, opts.adapter);
   });
 
 program

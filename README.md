@@ -83,6 +83,7 @@ While you work, each Claude Code event runs that runtime, which writes one atomi
 | `agenttrace show <run\|latest>` | Print a full run timeline. |
 | `agenttrace receipt <run\|latest>` | Generate a markdown receipt (`-o file` to save it). |
 | `agenttrace export <run\|latest>` | Write a run's `events.jsonl` (`-o file` to copy it). |
+| `agenttrace import <file> --adapter <name>` | Import a GitHub Actions or n8n run into a trace. |
 | `agenttrace ui` | Open the local dashboard in your browser (`--port`, `--no-open`). |
 | `agenttrace doctor` | Check the install. Add `--fix` to repair it. |
 | `agenttrace uninstall` | Remove the hooks and runtime. Add `--purge` to delete traces too. |
@@ -98,6 +99,21 @@ agenttrace run -- python agent.py
 ```
 
 `run` records the command, streams its output live while capturing it, snapshots what changed in git, grades the risk, and writes the same kind of run you get from a Claude Code session. It works with Aider, Cline, Codex, a plain shell script, or anything that runs in a terminal.
+
+## Import from CI and automations
+
+Pull runs from other systems into the same trace format:
+
+```bash
+# GitHub Actions (pipe a run's JSON in)
+gh run view <run-id> --json databaseId,displayTitle,headBranch,conclusion,createdAt,updatedAt,jobs > run.json
+agenttrace import run.json --adapter github-actions
+
+# n8n (export an execution to JSON)
+agenttrace import execution.json --adapter n8n
+```
+
+Imported runs show up in `list`, `show`, `receipt`, and the dashboard alongside your agent runs, with the same risk grading.
 
 ## Dashboard
 
@@ -122,11 +138,11 @@ Shipped:
 - **Slice 1** — Claude Code capture and the CLI.
 - **Slice 2** — the local dashboard (`agenttrace ui`).
 - **Slice 3** — `agenttrace run -- <command>`, the generic wrapper for any agent or script.
+- **Slice 4** — `agenttrace import` connectors for GitHub Actions and n8n.
 
 Planned next:
 
-- **Slice 4** — import adapters for n8n and GitHub Actions.
-- A reversibility-first risk pass and per-agent adapters (Aider, Cline) — see the open issues.
+- Context-aware reversibility and per-agent adapters (Aider, Cline) — see the open issues.
 
 The trace format carries a version and an escape hatch for unknown events, so each slice lands without breaking the last.
 
@@ -135,7 +151,7 @@ The trace format carries a version and an escape hatch for unknown events, so ea
 ```bash
 npm install
 npm run build     # tsc -> dist
-npm test          # vitest (56 tests)
+npm test          # vitest (63 tests)
 npm run dev -- list
 ```
 

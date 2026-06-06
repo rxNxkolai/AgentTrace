@@ -91,8 +91,11 @@ export function runRun(root: string, cmd: string[]): Promise<number> {
         risk: null,
       });
 
-      // file changes attributable to the command (status delta)
-      for (const p of changedPathsBetweenStatus(beforeStatus, gitStatusPorcelain(cwd))) {
+      // file changes attributable to the command (status delta), excluding our own store
+      const changed = changedPathsBetweenStatus(beforeStatus, gitStatusPorcelain(cwd)).filter(
+        (p) => !p.replace(/\\/g, "/").startsWith(".agenttrace/"),
+      );
+      for (const p of changed) {
         writeEvent(root, id, {
           ts: endedAt,
           type: "file_change",

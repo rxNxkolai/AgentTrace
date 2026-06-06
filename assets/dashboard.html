@@ -27,7 +27,8 @@
     padding:8px 10px;border-radius:8px;font-size:13px;outline:none}
   input:focus,select:focus{border-color:var(--green)}
   .filters{display:flex;gap:8px;margin-top:8px}
-  .filters select{width:50%}
+  .filters select{flex:1;min-width:0}
+  .src{color:var(--cyan);font-size:11px}
   .run{padding:11px 13px;border-bottom:1px solid var(--line);cursor:pointer}
   .run:hover{background:#12161a}
   .run.active{background:#12191c;box-shadow:inset 3px 0 0 var(--green)}
@@ -88,6 +89,11 @@
             <option value="success">success</option><option value="partial">partial</option>
             <option value="failed">failed</option><option value="interrupted">interrupted</option>
           </select>
+          <select id="source">
+            <option value="">any source</option>
+            <option value="claude-code">claude-code</option><option value="shell">shell</option>
+            <option value="github-actions">github-actions</option><option value="n8n">n8n</option>
+          </select>
         </div>
       </div>
       <div id="list"></div>
@@ -112,10 +118,11 @@ async function load(){
   render();
 }
 function filtered(){
-  const q=$("#q").value.trim().toLowerCase(), rk=$("#risk").value, st=$("#status").value;
+  const q=$("#q").value.trim().toLowerCase(), rk=$("#risk").value, st=$("#status").value, sc=$("#source").value;
   return RUNS.filter(r=>{
     if(rk && r.maxRisk!==rk) return false;
     if(st && r.status!==st) return false;
+    if(sc && r.source!==sc) return false;
     if(q){
       const hay=(r.sessionId+" "+(r.firstPrompt||"")).toLowerCase();
       if(!hay.includes(q)) return false;
@@ -138,6 +145,7 @@ function render(){
         <span>${esc(when(r.startedAt))}</span>
         <span>${dur(r.durationMs)}</span>
         <span>${r.fileCount}f · ${r.commandCount}c</span>
+        <span class="src">${esc(r.source || "")}</span>
       </div>
     </div>`).join("");
   document.querySelectorAll(".run").forEach(el=>el.onclick=()=>open(el.dataset.id));
@@ -186,7 +194,7 @@ function detail(run,r){
   ${r?`<div class="sec">Recommendation</div><div class="rec">${esc(r.nextRecommendedAction)}</div>`:""}
   `;
 }
-$("#q").oninput=render; $("#risk").onchange=render; $("#status").onchange=render;
+$("#q").oninput=render; $("#risk").onchange=render; $("#status").onchange=render; $("#source").onchange=render;
 load();
 </script>
 </body>

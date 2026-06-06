@@ -34,7 +34,7 @@ export type EventType =
   | "passthrough";
 
 /** The source agent/adapter that produced an event. */
-export type EventSource = "claude-code" | "shell";
+export type EventSource = "claude-code" | "shell" | "github-actions" | "n8n";
 
 /**
  * One captured event — the on-disk shape written by the hook runtime

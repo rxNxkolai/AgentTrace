@@ -6,6 +6,18 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-06
+
+### Added
+- **`agenttrace import <file> --adapter github-actions|n8n`** — pull CI and automation runs
+  into the same trace format. Imported runs appear in `list`, `show`, `receipt`, and the
+  dashboard with the same risk grading.
+- Dashboard **source filter** (claude-code / shell / github-actions / n8n) and a per-run
+  source badge.
+
+### Fixed
+- `run` no longer counts its own `.agenttrace/` store as a changed file.
+
 ## [0.3.0] - 2026-06-06
 
 ### Added
@@ -52,7 +64,8 @@ First slice: Claude Code capture and the CLI.
 - Sanitized markdown receipts.
 - Terminal-style logo, README, and the slice-one design doc.
 
-[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rxNxkolai/AgentTrace/releases/tag/v0.1.0

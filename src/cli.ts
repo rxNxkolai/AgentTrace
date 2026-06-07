@@ -57,8 +57,9 @@ program
   .description('Generate a markdown receipt ("latest" or a run id / prefix).')
   .option("-o, --out <file>", "write the receipt to a file")
   .option("--json", "output the receipt as JSON")
+  .option("--card", "output a shareable SVG card instead of markdown")
   .action((run, opts) => {
-    process.exitCode = runReceipt(process.cwd(), run, { out: opts.out, json: opts.json });
+    process.exitCode = runReceipt(process.cwd(), run, { out: opts.out, json: opts.json, card: opts.card });
   });
 
 program

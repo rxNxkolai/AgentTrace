@@ -6,6 +6,13 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-06
+
+### Added
+- **Shareable receipt cards** — `agenttrace receipt <run> --card` renders a self-contained,
+  branded SVG of a run (status, risk, top flags with reversibility, recommendation). Drop it in
+  a PR, an issue, or a tweet. No dependencies.
+
 ## [0.5.0] - 2026-06-06
 
 ### Added
@@ -76,7 +83,8 @@ First slice: Claude Code capture and the CLI.
 - Sanitized markdown receipts.
 - Terminal-style logo, README, and the slice-one design doc.
 
-[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.2.0...v0.3.0

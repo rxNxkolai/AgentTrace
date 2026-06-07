@@ -14,6 +14,7 @@ export function generateReceipt(run: Run): Receipt {
     sessionId: run.sessionId,
     source: run.source,
     goal,
+    riskMax: run.risk.max,
     status: run.status,
     startedAt: run.startedAt,
     endedAt: run.endedAt,

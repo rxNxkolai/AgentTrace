@@ -118,6 +118,7 @@ export interface Receipt {
   sessionId: string;
   source: EventSource;
   goal: string;
+  riskMax: RiskLevel;
   status: RunStatus;
   startedAt?: string;
   endedAt?: string;

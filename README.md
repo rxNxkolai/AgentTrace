@@ -81,7 +81,7 @@ While you work, each Claude Code event runs that runtime, which writes one atomi
 | `agenttrace run -- <command>` | Record any command as a run (any agent or script). |
 | `agenttrace list` | List recorded runs. |
 | `agenttrace show <run\|latest>` | Print a full run timeline. |
-| `agenttrace receipt <run\|latest>` | Generate a markdown receipt (`-o file` to save it). |
+| `agenttrace receipt <run\|latest>` | Generate a markdown receipt (`-o file`, or `--card` for a shareable SVG). |
 | `agenttrace export <run\|latest>` | Write a run's `events.jsonl` (`-o file` to copy it). |
 | `agenttrace import <file> --adapter <name>` | Import a GitHub Actions or n8n run into a trace. |
 | `agenttrace ui` | Open the local dashboard in your browser (`--port`, `--no-open`). |
@@ -99,6 +99,18 @@ agenttrace run -- python agent.py
 ```
 
 `run` records the command, streams its output live while capturing it, snapshots what changed in git, grades the risk, and writes the same kind of run you get from a Claude Code session. It works with Aider, Cline, Codex, a plain shell script, or anything that runs in a terminal.
+
+## Shareable receipt cards
+
+Turn any run into a self-contained SVG card to drop in a PR, an issue, or a tweet:
+
+```bash
+agenttrace receipt latest --card -o receipt.svg
+```
+
+<p align="center">
+  <img src="assets/brand/sample-card.png" alt="An AgentTrace receipt card showing status, risk, a flagged auth-file change, and the recommendation" width="640">
+</p>
 
 ## Import from CI and automations
 
@@ -151,7 +163,7 @@ The trace format carries a version and an escape hatch for unknown events, so ea
 ```bash
 npm install
 npm run build     # tsc -> dist
-npm test          # vitest (67 tests)
+npm test          # vitest (70 tests)
 npm run dev -- list
 ```
 

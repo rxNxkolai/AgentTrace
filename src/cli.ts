@@ -9,6 +9,8 @@ import { runRun } from "./commands/run.js";
 import { runExport } from "./commands/export.js";
 import { runImport } from "./commands/import.js";
 import { runUi } from "./commands/ui.js";
+import { runGuard } from "./commands/guard.js";
+import { runMcp } from "./commands/mcp.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runUninstall } from "./commands/uninstall.js";
 
@@ -32,6 +34,22 @@ program
   .argument("<command...>", "command to run, e.g. -- npm test")
   .action(async (command: string[]) => {
     process.exitCode = await runRun(process.cwd(), command);
+  });
+
+program
+  .command("guard [subcommand] [args...]")
+  .description("Policy guard: status | on [--block] | off | test -- <command>")
+  .option("--block", "with `on`: block the worst actions, not just warn")
+  .allowUnknownOption() // so `guard test -- rm -rf /` doesn't parse -rf as a flag
+  .action((subcommand, args, opts) => {
+    process.exitCode = runGuard(process.cwd(), subcommand, args ?? [], { block: opts.block });
+  });
+
+program
+  .command("mcp")
+  .description("Run the AgentTrace MCP stdio server (expose runs/receipts/risk to agents & IDEs).")
+  .action(() => {
+    process.exitCode = runMcp(process.cwd());
   });
 
 program

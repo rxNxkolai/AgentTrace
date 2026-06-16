@@ -1,7 +1,7 @@
 {
   "name": "@rnxkolai/agenttrace",
-  "version": "0.6.0",
-  "description": "The open-source flight recorder for AI agents. Records what a Claude Code session did and turns it into a readable receipt.",
+  "version": "0.7.0",
+  "description": "The open-source black box for AI coding agents. Records what they do, flags what's risky, and can block irreversible actions before they run.",
   "license": "MIT",
   "type": "module",
   "author": "rxNxkolai (https://github.com/rxNxkolai)",

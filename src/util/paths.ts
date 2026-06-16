@@ -21,6 +21,9 @@ export function runtimeHookPath(root: string): string {
 export function configPath(root: string): string {
   return path.join(agenttraceDir(root), "config.json");
 }
+export function policyPath(root: string): string {
+  return path.join(agenttraceDir(root), "policy.json");
+}
 export function receiptsDir(root: string): string {
   return path.join(agenttraceDir(root), "receipts");
 }

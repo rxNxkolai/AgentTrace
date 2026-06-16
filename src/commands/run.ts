@@ -11,6 +11,8 @@ import {
 } from "../util/git.js";
 import { pc } from "../render/colors.js";
 import { riskColor } from "../render/colors.js";
+import { loadPolicy } from "../guard/policy.js";
+import { evaluateAction } from "../guard/evaluate.js";
 
 const OUT_CAP = 4096;
 
@@ -60,6 +62,37 @@ export function runRun(root: string, cmd: string[]): Promise<number> {
       sourcePayloadSanitized: {},
       risk: null,
     });
+
+    // Guard: when enabled in block mode, evaluate the command before running it. Fail-open —
+    // any error here lets the command proceed (never block legitimate work on a guard bug).
+    try {
+      const policy = loadPolicy(root);
+      if (policy.mode === "block") {
+        const d = evaluateAction({ command: cmdStr }, policy);
+        if (d.verdict === "block") {
+          const ts = new Date().toISOString();
+          writeEvent(root, id, {
+            ts, type: "permission", source: "shell", hookEvent: "guard",
+            title: `Guard blocked: ${cmdStr}`,
+            data: { decision: "guard_block", reason: d.reason, level: d.level, command: cmdStr },
+            sourcePayloadSanitized: {}, risk: null,
+          });
+          writeEvent(root, id, {
+            ts, type: "run_end", source: "shell", hookEvent: "run",
+            title: "Run end (blocked)", data: { blocked: true, exitCode: null },
+            sourcePayloadSanitized: {}, risk: null,
+          });
+          console.error("");
+          console.error(pc.bgRed(pc.white(" BLOCKED ")) + " " + pc.red(d.reason));
+          console.error(pc.dim(`  ${cmdStr}`));
+          console.error(pc.dim("  Not executed. Override: agenttrace guard off  (or add an allow rule in .agenttrace/policy.json)"));
+          resolve(2);
+          return;
+        }
+      }
+    } catch {
+      /* fail-open: guard never prevents a run on its own error */
+    }
 
     const isWin = process.platform === "win32";
     const child = isWin

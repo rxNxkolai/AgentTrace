@@ -19,6 +19,8 @@ function receipt(over: Partial<Receipt> = {}): Receipt {
     ],
     reviewChecklist: [],
     nextRecommendedAction: "Do NOT auto-merge. Critical, irreversible actions detected.",
+    guardBlocked: 0,
+    guardWarned: 0,
     ...over,
   };
 }

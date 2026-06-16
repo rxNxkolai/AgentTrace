@@ -327,6 +327,92 @@ function readStdin() {
   }
 }
 
+// ---- Guard (opt-in, fail-open) ----
+var GUARD_ORDER = { safe: 0, low: 1, medium: 2, high: 3, critical: 4 };
+
+function loadPolicyMode(projectDir) {
+  try {
+    const pol = JSON.parse(fs.readFileSync(path.join(projectDir, ".agenttrace", "policy.json"), "utf8"));
+    return {
+      mode: pol.mode || "off",
+      blockAtOrAbove: pol.blockAtOrAbove || "critical",
+      warnAtOrAbove: pol.warnAtOrAbove || "high",
+      allow: Array.isArray(pol.allow) ? pol.allow : [],
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
+/** Minimal mirror of the catastrophic risk rules for the live block path. Pure. */
+function guardAssess(payload) {
+  const tool = toolName(payload);
+  const input = toolInput(payload);
+  const cmd = typeof input.command === "string" ? input.command : "";
+  const np = String(input.file_path || input.path || input.notebook_path || "").replace(/\\/g, "/");
+  const mk = (level, reversibility, reason) => ({ level, reversibility, reason });
+  if (/\brm\s+-[a-z]*r[a-z]*f|\brm\s+-[a-z]*f[a-z]*r|\brm\s+-rf\b/.test(cmd)) return mk("critical", "irreversible", "Recursive force-delete (rm -rf)");
+  if (/\b(?:remove-item|ri)\b(?=[^\n]*\s-recurse\b)(?=[^\n]*\s-force\b)/i.test(cmd)) return mk("critical", "irreversible", "Recursive force-delete (Remove-Item -Recurse -Force)");
+  if (/git\s+push\b[^\n]*\b(main|master)\b/.test(cmd)) return mk("critical", "irreversible", "Push to main/master");
+  if (/\b(npm|yarn|pnpm)\s+publish\b/.test(cmd)) return mk("critical", "irreversible", "Package publish");
+  if (/\b(drop\s+(table|database)|truncate\s+table)\b/i.test(cmd)) return mk("critical", "irreversible", "Destructive database command");
+  if (isFileEditTool(tool) && /(^|\/)\.env(\.[\w-]+)?$/.test(np)) return mk("critical", "irreversible", ".env file write: " + np);
+  if (tool === "Read" && /(^|\/)\.env(\.[\w-]+)?$/.test(np)) return mk("critical", null, ".env file read: " + np);
+  if (/\brm\s+(?!-[a-z]*[rf])|\bgit\s+rm\b|\bdel\s+|\b(?:remove-item|ri)\b|\brmdir\b|\brd\s+\/s\b/i.test(cmd)) return mk("high", "irreversible", "File deletion command");
+  if (/\b(?:curl|wget)\b[^\n]*(?:-X\s*(?:POST|PUT|PATCH|DELETE)|--data)|\bgit\s+push\b|\b(?:vercel|netlify|fly)\s+deploy\b/i.test(cmd)) return mk("high", "irreversible", "Outbound network call with side effects");
+  return null;
+}
+
+/** Evaluate the proposed tool call against policy; record the decision; emit deny on block. */
+function applyGuard(projectDir, payload, sessionId) {
+  const policy = loadPolicyMode(projectDir);
+  if (!policy || policy.mode === "off") return;
+  const input = toolInput(payload);
+  const cmd = typeof input.command === "string" ? input.command : "";
+  for (const pat of policy.allow) {
+    try {
+      if (cmd && new RegExp(pat).test(cmd)) return;
+    } catch (_) {
+      /* ignore bad patterns */
+    }
+  }
+  const g = guardAssess(payload);
+  if (!g) return;
+  const order = GUARD_ORDER[g.level] || 0;
+  let verdict = null;
+  if (policy.mode === "block" && order >= (GUARD_ORDER[policy.blockAtOrAbove] || 4)) verdict = "block";
+  else if (order >= (GUARD_ORDER[policy.warnAtOrAbove] || 3)) verdict = "warn";
+  if (!verdict) return;
+  try {
+    writeEventFile(eventsDir(projectDir, sessionId), {
+      v: SCHEMA_VERSION,
+      ts: new Date().toISOString(),
+      seq: 0,
+      type: "permission",
+      sessionId,
+      source: "claude-code",
+      hookEvent: "guard",
+      title: (verdict === "block" ? "Guard blocked: " : "Guard warned: ") + (cmd || g.reason),
+      data: { decision: "guard_" + verdict, reason: g.reason, level: g.level, command: cmd },
+      sourcePayloadSanitized: {},
+      risk: null,
+    });
+  } catch (_) {
+    /* recording is best-effort */
+  }
+  if (verdict === "block") {
+    process.stdout.write(
+      JSON.stringify({
+        hookSpecificOutput: {
+          hookEventName: "PreToolUse",
+          permissionDecision: "deny",
+          permissionDecisionReason: "AgentTrace Guard: " + g.reason,
+        },
+      }),
+    );
+  }
+}
+
 /** Script entrypoint. Reads stdin, captures one event, always exits 0. */
 function main() {
   let projectDir = process.cwd();
@@ -348,6 +434,13 @@ function main() {
     const effectiveEvent = payload && payload.hook_event_name ? payload.hook_event_name : hookEvent;
     const event = normalizeEvent(effectiveEvent, payload, 0, new Date().toISOString());
     writeEventFile(eventsDir(projectDir, event.sessionId), event);
+    if (effectiveEvent === "PreToolUse") {
+      try {
+        applyGuard(projectDir, payload, event.sessionId);
+      } catch (_) {
+        /* fail-open: a guard error must never block the tool */
+      }
+    }
   } catch (e) {
     try {
       writeDiag(projectDir, "capture-error: " + (e && e.stack ? e.stack : String(e)));
@@ -372,6 +465,7 @@ module.exports = {
   eventsDir,
   sanitizeSessionId,
   isFileEditTool,
+  guardAssess,
 };
 
 if (require.main === module) {

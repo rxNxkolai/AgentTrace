@@ -6,6 +6,23 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-07
+
+The big one: AgentTrace goes from passively recording to actively protecting.
+
+### Added
+- **Guard** — a policy engine that can **warn or block irreversible actions before they run**,
+  reusing the same risk + reversibility engine that grades receipts. Two surfaces: a Claude Code
+  **PreToolUse** hook (per tool call) and **`agenttrace run`** (per command, any agent). Opt-in,
+  **fail-open** (any error allows the action — a guard bug can never block real work), warn-first
+  defaults. Every block is recorded in the run.
+  - Commands: `agenttrace guard status | on [--block] | off | test -- <command>`.
+  - Policy stored at `.agenttrace/policy.json`.
+- **MCP server** — `agenttrace mcp` runs a dependency-free Model Context Protocol stdio server
+  exposing `list_runs`, `get_receipt`, and `query_risk` so any agent or IDE can query the
+  recorder and ask whether an action is risky.
+- Receipts now show a `Guard: N blocked, M warned` line.
+
 ## [0.6.0] - 2026-06-06
 
 ### Added
@@ -83,7 +100,8 @@ First slice: Claude Code capture and the CLI.
 - Sanitized markdown receipts.
 - Terminal-style logo, README, and the slice-one design doc.
 
-[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/rxNxkolai/AgentTrace/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/rxNxkolai/AgentTrace/compare/v0.3.0...v0.4.0

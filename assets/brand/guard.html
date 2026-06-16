@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#07080a; --term:#0e1113; --bar:#15191b; --line:#1d2528;
+    --txt:#cdd6d0; --dim:#6b7a70; --green:#3ee07a; --greenhi:#8df7a8;
+    --crit:#ff5f57; --critdim:#ff8a85;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1280px;height:720px}
+  body{background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace}
+  .term{width:1180px;height:640px;background:var(--term);border-radius:14px;
+    box-shadow:0 30px 90px rgba(0,0,0,.65),inset 0 0 0 1px #1d2528;overflow:hidden;display:flex;flex-direction:column}
+  .bar{height:44px;background:var(--bar);display:flex;align-items:center;gap:9px;padding:0 16px;border-bottom:1px solid var(--line);flex:0 0 auto}
+  .dot{width:13px;height:13px;border-radius:50%}.r{background:#ff5f57}.y{background:#febc2e}.g{background:#28c840}
+  .bar .title{margin-left:14px;color:var(--dim);font-size:14px;font-weight:500}
+  .bar .on{margin-left:auto;color:var(--green);font-size:12px;font-weight:700;letter-spacing:.5px}
+  .scr{padding:26px 30px;font-size:19px;line-height:1.6;color:var(--txt);flex:1 1 auto;overflow:hidden}
+  .ln{white-space:pre-wrap;opacity:0}.ln.on{opacity:1}
+  .pr{color:var(--green);font-weight:700}
+  .cmd{color:#eafff0;font-weight:600}
+  .dim{color:var(--dim)}
+  .attempt{color:#cdd6d0}
+  .tool{color:var(--dim);font-weight:700;border:1px solid #2a3330;border-radius:5px;padding:0 7px;font-size:14px;margin-right:8px}
+  .danger{color:#ffd0cd;font-weight:600}
+  .blocked{color:#fff;background:var(--crit);font-weight:800;border-radius:5px;padding:1px 9px;letter-spacing:.5px;box-shadow:0 0 18px rgba(255,95,87,.5)}
+  .reason{color:var(--critdim);font-size:15px}
+  .ok{color:var(--green);font-weight:700}
+  .cur{display:inline-block;width:11px;height:21px;background:var(--green);transform:translateY(4px);margin-left:3px;box-shadow:0 0 10px var(--green)}
+  .scan{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px)}
+</style>
+</head>
+<body>
+  <div class="term">
+    <div class="bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+      <div class="title">agenttrace guard</div><div class="on">● GUARD ON · BLOCK</div></div>
+    <div class="scr" id="scr">
+      <div class="ln" data-s="1"><span class="pr">~/app $</span> <span class="cmd">claude "clean up the repo and redeploy"</span></div>
+      <div class="ln" data-s="2"><span class="dim">  agent working…</span></div>
+      <div class="ln" data-s="3">&nbsp;</div>
+      <div class="ln" data-s="3"><span class="tool">Bash</span><span class="danger">rm -rf .</span>      <span class="blocked">BLOCKED</span></div>
+      <div class="ln" data-s="4"><span class="reason">     critical · irreversible — recursive force-delete (rm -rf)</span></div>
+      <div class="ln" data-s="5">&nbsp;</div>
+      <div class="ln" data-s="5"><span class="tool">Bash</span><span class="danger">git push --force origin main</span>   <span class="blocked">BLOCKED</span></div>
+      <div class="ln" data-s="6"><span class="reason">     critical · irreversible — pushed to main/master</span></div>
+      <div class="ln" data-s="7">&nbsp;</div>
+      <div class="ln" data-s="7"><span class="tool">Read</span><span class="danger">.env</span>       <span class="blocked">BLOCKED</span></div>
+      <div class="ln" data-s="8"><span class="reason">     critical · secret exposure — .env file read</span></div>
+      <div class="ln" data-s="9">&nbsp;</div>
+      <div class="ln" data-s="9"><span class="ok">✓ session continued. AgentTrace Guard blocked 3 irreversible actions.</span> <span class="cur"></span></div>
+    </div>
+  </div>
+  <div class="scan"></div>
+<script>
+  function setStep(n){document.querySelectorAll('.ln').forEach(el=>el.classList.toggle('on',Number(el.dataset.s)<=n));}
+  window.setStep=setStep; setStep(9);
+</script>
+</body>
+</html>

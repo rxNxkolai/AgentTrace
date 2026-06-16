@@ -129,4 +129,6 @@ export interface Receipt {
   riskyActions: RiskFinding[];
   reviewChecklist: string[];
   nextRecommendedAction: string;
+  guardBlocked: number;
+  guardWarned: number;
 }

@@ -9,6 +9,9 @@ import {
 export function generateReceipt(run: Run): Receipt {
   const goal = run.prompts[0]?.trim() || "(no prompt captured)";
   const riskyActions = run.risk.findings.filter((f) => RISK_ORDER[f.level] >= RISK_ORDER.medium);
+  const decisions = run.events.filter((e) => e.type === "permission");
+  const guardBlocked = decisions.filter((e) => e.data?.["decision"] === "guard_block").length;
+  const guardWarned = decisions.filter((e) => e.data?.["decision"] === "guard_warn").length;
 
   return {
     sessionId: run.sessionId,
@@ -25,6 +28,8 @@ export function generateReceipt(run: Run): Receipt {
     riskyActions,
     reviewChecklist: buildChecklist(run),
     nextRecommendedAction: recommend(run),
+    guardBlocked,
+    guardWarned,
   };
 }
 
@@ -100,7 +105,11 @@ export function renderReceiptMarkdown(r: Receipt): string {
   lines.push(`- **Started:** ${fmtTime(r.startedAt)}`);
   lines.push(`- **Duration:** ${fmtDuration(r.durationMs)}`);
   const adapter = r.source === "shell" ? "Shell (`run`)" : "Claude Code";
-  lines.push(`- **Adapter:** ${adapter}`, "");
+  lines.push(`- **Adapter:** ${adapter}`);
+  if (r.guardBlocked || r.guardWarned) {
+    lines.push(`- **Guard:** ${r.guardBlocked} blocked · ${r.guardWarned} warned`);
+  }
+  lines.push("");
 
   lines.push("## Goal", "", r.goal, "");
 

@@ -2,7 +2,7 @@
   <img src="assets/brand/logo.png" alt="AgentTrace" width="620">
 </p>
 
-<p align="center"><b>The open-source flight recorder for AI agents.</b></p>
+<p align="center"><b>The open-source black box for AI coding agents. Records what they do, and stops what they shouldn't.</b></p>
 
 <p align="center">
   <a href="https://github.com/rxNxkolai/AgentTrace/actions/workflows/ci.yml"><img src="https://github.com/rxNxkolai/AgentTrace/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -24,6 +24,34 @@ agenttrace init            # wire Claude Code hooks for this repo
 # work a normal Claude Code session
 agenttrace receipt latest  # read what just happened
 ```
+
+## Guard: stop the irreversible before it happens
+
+AgentTrace started as a recorder. Now it can also pull the brakes. Turn on Guard and the same risk engine that grades your receipts evaluates each action *before* it runs, and blocks the ones you can't undo.
+
+<p align="center">
+  <img src="assets/brand/guard.gif" alt="An agent tries rm -rf, git push --force origin main, and reading .env. AgentTrace Guard blocks all three as critical and irreversible, and the session continues safely." width="860">
+</p>
+
+```bash
+agenttrace guard on --block          # enforce; or `guard on` to just warn
+agenttrace guard test -- rm -rf /    # dry-run any command, no execution
+agenttrace run -- aider ...          # Guard protects any agent, not just Claude Code
+```
+
+It works on two surfaces: a Claude Code **PreToolUse** hook (per tool call) and **`agenttrace run`** (per command, any agent). Three rules keep it trustworthy:
+
+- **Opt-in.** Off by default. Until you enable it, AgentTrace only records.
+- **Fail-open.** Any error, ever, lets the action through. A bug in Guard can never block your real work.
+- **Warn first.** The default blocks only the catastrophic and irreversible (`rm -rf`, push to main, `.env` writes, `DROP TABLE`, `npm publish`); everything else just gets flagged. Every block is recorded in the receipt.
+
+## Talk to it from any agent (MCP)
+
+`agenttrace mcp` runs a [Model Context Protocol](https://modelcontextprotocol.io) stdio server, so any agent or IDE can query the flight recorder and ask whether an action is risky before taking it:
+
+- `list_runs` — recent runs
+- `get_receipt` — a run's full receipt
+- `query_risk` — "is `git push --force origin main` risky?" → `critical, irreversible`
 
 ## Why it exists
 
@@ -85,6 +113,8 @@ While you work, each Claude Code event runs that runtime, which writes one atomi
 | `agenttrace export <run\|latest>` | Write a run's `events.jsonl` (`-o file` to copy it). |
 | `agenttrace import <file> --adapter <name>` | Import a GitHub Actions or n8n run into a trace. |
 | `agenttrace ui` | Open the local dashboard in your browser (`--port`, `--no-open`). |
+| `agenttrace guard <on\|off\|status\|test>` | Policy guard: warn or block irreversible actions. |
+| `agenttrace mcp` | Run the MCP stdio server (expose runs / receipts / risk to agents). |
 | `agenttrace doctor` | Check the install. Add `--fix` to repair it. |
 | `agenttrace uninstall` | Remove the hooks and runtime. Add `--purge` to delete traces too. |
 
@@ -151,6 +181,7 @@ Shipped:
 - **Slice 2** — the local dashboard (`agenttrace ui`).
 - **Slice 3** — `agenttrace run -- <command>`, the generic wrapper for any agent or script.
 - **Slice 4** — `agenttrace import` connectors for GitHub Actions and n8n.
+- **Guard + MCP (v0.7)** — block irreversible actions before they run; an MCP server so any agent can query the recorder.
 
 Planned next:
 
@@ -163,7 +194,7 @@ The trace format carries a version and an escape hatch for unknown events, so ea
 ```bash
 npm install
 npm run build     # tsc -> dist
-npm test          # vitest (70 tests)
+npm test          # vitest (87 tests)
 npm run dev -- list
 ```
 
